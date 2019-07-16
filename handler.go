@@ -59,6 +59,15 @@ type PathConfig struct {
 	cacheControl string
 }
 
+// PathReq is returned by find() with a non-nil PathConfig
+// when a request has been matched to a path. Host comes unset.
+// This struct is passed into the vanity template.
+type PathReq struct {
+	Host    string
+	Subpath string
+	*PathConfig
+}
+
 func newHandler(configData []byte) (*Handler, error) {
 	h := &Handler{Config: &Config{Paths: make(map[string]*PathConfig)}}
 	if err := yaml.Unmarshal(configData, h.Config); err != nil {
@@ -72,37 +81,39 @@ func newHandler(configData []byte) (*Handler, error) {
 		cacheControl = fmt.Sprintf("public, max-age=%d", *h.CacheAge)
 	}
 
-	for path, e := range h.Config.Paths {
-		h.Config.Paths[path].Path = strings.TrimSuffix(path, "/")
+	for p, e := range h.Paths {
+		h.Paths[p].Path = strings.TrimSuffix(p, "/")
 		if len(e.RedirPaths) < 1 {
+			// was not provided, pass in global value.
 			e.RedirPaths = h.RedirPaths
 		}
-		h.Config.Paths[path].cacheControl = cacheControl
+		h.Paths[p].cacheControl = cacheControl
 		if e.CacheAge != nil {
-			h.Config.Paths[path].cacheControl = fmt.Sprintf("public, max-age=%d", *e.CacheAge)
+			// provided, override global value.
+			h.Paths[p].cacheControl = fmt.Sprintf("public, max-age=%d", *e.CacheAge)
 		}
 
 		switch {
 		case e.Display != "":
 			// Already filled in.
 		case strings.HasPrefix(e.Repo, "https://github.com/"):
-			h.Config.Paths[path].Display = fmt.Sprintf("%v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}", e.Repo, e.Repo, e.Repo)
+			h.Paths[p].Display = fmt.Sprintf("%v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}", e.Repo, e.Repo, e.Repo)
 		case strings.HasPrefix(e.Repo, "https://bitbucket.org"):
-			h.Config.Paths[path].Display = fmt.Sprintf("%v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}", e.Repo, e.Repo, e.Repo)
+			h.Paths[p].Display = fmt.Sprintf("%v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}", e.Repo, e.Repo, e.Repo)
 		}
 
 		switch {
 		case e.VCS != "":
 			// Already filled in.
 			if e.VCS != "bzr" && e.VCS != "git" && e.VCS != "hg" && e.VCS != "svn" {
-				return nil, fmt.Errorf("configuration for %v: unknown VCS %s", path, e.VCS)
+				return nil, fmt.Errorf("configuration for %v: unknown VCS %s", p, e.VCS)
 			}
 		case strings.HasPrefix(e.Repo, "https://github.com/"):
-			h.Config.Paths[path].VCS = "git"
+			h.Paths[p].VCS = "git"
 		case e.Repo == "" && e.Redir != "":
 			// Redirect-only can go anywhere.
 		default:
-			return nil, fmt.Errorf("configuration for %v: cannot infer VCS from %s", path, e.Repo)
+			return nil, fmt.Errorf("configuration for %v: cannot infer VCS from %s", p, e.Repo)
 		}
 
 		h.PathConfigs = append(h.PathConfigs, e)
@@ -112,21 +123,19 @@ func newHandler(configData []byte) (*Handler, error) {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	current := r.URL.Path
-	pc, subpath := h.PathConfigs.find(current)
-	if pc == nil && current == "/" {
-		if err := indexTmpl.Execute(w, &h.Config); err != nil {
+	pc := h.PathConfigs.find(r.URL.Path)
+	if pc.PathConfig == nil {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+		} else if err := indexTmpl.Execute(w, &h.Config); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
 		return
 	}
-	if pc == nil {
-		http.NotFound(w, r)
-		return
-	}
+
 	// Redirect for file downloads.
-	if pc.Redir != "" && StringInSlices(subpath, pc.RedirPaths) {
-		redirTo := pc.Redir + strings.TrimPrefix(current, pc.Path)
+	if pc.Redir != "" && StringInSlices(pc.Subpath, pc.RedirPaths) {
+		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
 		http.Redirect(w, r, redirTo, 302)
 		return
 	}
@@ -135,16 +144,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+
+	// Create a vanity redirect page.
 	w.Header().Set("Cache-Control", pc.cacheControl)
-	if err := vanityTmpl.Execute(w, struct {
-		Host    string
-		Subpath string
-		*PathConfig
-	}{
-		Host:       h.Hostname(r),
-		Subpath:    subpath,
-		PathConfig: pc,
-	}); err != nil {
+	pc.Host = h.Hostname(r)
+	if err := vanityTmpl.Execute(w, pc); err != nil {
 		http.Error(w, "cannot render the page", http.StatusInternalServerError)
 	}
 }
@@ -183,17 +187,20 @@ func (pset PathConfigs) Swap(i, j int) {
 	pset[i], pset[j] = pset[j], pset[i]
 }
 
-func (pset PathConfigs) find(path string) (pc *PathConfig, subpath string) {
+func (pset PathConfigs) find(path string) PathReq {
 	// Fast path with binary search to retrieve exact matches
 	// e.g. given pset ["/", "/abc", "/xyz"], path "/def" won't match.
 	i := sort.Search(len(pset), func(i int) bool {
 		return pset[i].Path >= path
 	})
 	if i < len(pset) && pset[i].Path == path {
-		return pset[i], ""
+		return PathReq{PathConfig: pset[i]}
 	}
 	if i > 0 && strings.HasPrefix(path, pset[i-1].Path+"/") {
-		return pset[i-1], path[len(pset[i-1].Path)+1:]
+		return PathReq{
+			PathConfig: pset[i-1],
+			Subpath:    path[len(pset[i-1].Path)+1:],
+		}
 	}
 
 	// Slow path, now looking for the longest prefix/shortest subpath i.e.
@@ -201,7 +208,7 @@ func (pset PathConfigs) find(path string) (pc *PathConfig, subpath string) {
 	//  * query "/abc/foo" returns "/abc/" with a subpath of "foo"
 	//  * query "/x" returns "/" with a subpath of "x"
 	lenShortestSubpath := len(path)
-	var bestMatchConfig *PathConfig
+	var p PathReq
 
 	// After binary search with the >= lexicographic comparison,
 	// nothing greater than i will be a prefix of path.
@@ -215,10 +222,10 @@ func (pset PathConfigs) find(path string) (pc *PathConfig, subpath string) {
 		}
 		sSubpath := strings.TrimPrefix(path, ps.Path)
 		if len(sSubpath) < lenShortestSubpath {
-			subpath = sSubpath
+			p.Subpath = sSubpath
 			lenShortestSubpath = len(sSubpath)
-			bestMatchConfig = pset[i]
+			p.PathConfig = pset[i]
 		}
 	}
-	return bestMatchConfig, subpath
+	return p
 }

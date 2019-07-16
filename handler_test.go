@@ -260,14 +260,14 @@ func TestPathConfigSetFind(t *testing.T) {
 			pset[i] = &PathConfig{Path: test.paths[i]}
 		}
 		sort.Sort(pset)
-		pc, subpath := pset.find(test.query)
+		pc := pset.find(test.query)
 		var got string
-		if pc != nil {
+		if pc.PathConfig != nil {
 			got = pc.Path
 		}
-		if got != test.want || subpath != test.subpath {
+		if got != test.want || pc.Subpath != test.subpath {
 			t.Errorf("pathConfigSet(%v).find(%q) = %v, %v; want %v, %v",
-				test.paths, test.query, emptyToNil(got), subpath, emptyToNil(test.want), test.subpath)
+				test.paths, test.query, emptyToNil(got), pc.Subpath, emptyToNil(test.want), test.subpath)
 		}
 	}
 }

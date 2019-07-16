@@ -32,3 +32,6 @@ dashboard download counter"
   "color": "blue"
 }
 ```
+```
+/https/code.golift.io/badge/grafana/dashboard/downloads/id+id+id+id
+```

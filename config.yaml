@@ -1,3 +1,7 @@
+# This is the host path used for godoc links, etc.
+# Determined automatically if not set here.
+host: code.golift.io
+
 # Used as the title of the index page.
 title: Go Lift Code
 
@@ -8,11 +12,8 @@ links:
   - title: GitHub
     url: https://github.com/golift
 
-# This is the host path used for godoc links, etc.
-# Determined automatically if not set here.
-host: code.golift.io
-
-# If this is set, a source link is displayed on the index page.
+# If this is set, a source link (to this path) is displayed on the index page.
+# protip: setup a redirect for /source - see below.
 src: /source
 
 # This controls the max-age cache-control value.
@@ -56,6 +57,7 @@ paths:
   /securityspy:
     repo: https://github.com/golift/securityspy
     redir: https://github.com/golift/securityspy
+  # No repos.
   /unifi-poller:
     redir: https://github.com/davidnewhall/unifi-poller
   /secspy:

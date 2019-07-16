@@ -28,8 +28,12 @@ var indexTmpl = template.Must(template.New("index").Parse(`<!DOCTYPE html>
     <h3><a href="{{.URL}}">{{.Title}}</a></h3>
     {{end -}}
     <ul>
-    {{range .Paths}}{{if ne .Repo ""}}  <li>{{.Path}}</li><li><a href="https://godoc.org/{{$.Host}}{{.Path}}">GoDoc</a></li><li><a href="{{.Repo}}">Code</a></li>
-    {{end}}{{end}}</ul>
+      {{range .Paths}}{{if ne .Repo "" -}}
+      <li><a href="{{.Path}}">{{.Path}}</a></li>
+      <li><a href="https://godoc.org/{{$.Host}}{{.Path}}">GoDoc</a></li>
+      <li><a href="{{.Repo}}">Code</a></li>
+      {{end}}{{end}}
+    </ul>
 {{if ne .Src "" -}}
     (<a href="{{.Src}}">source</a>)
 {{end -}}
