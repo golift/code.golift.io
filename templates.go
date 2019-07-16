@@ -5,6 +5,7 @@ import "text/template"
 var indexTmpl = template.Must(template.New("index").Parse(`<!DOCTYPE html>
 <html>
   <head>
+  <title>{{.Title}}</title>
   <link rel='icon' href='/favicon.ico' type='image/x-icon'/ >
     <style>
     ul {
