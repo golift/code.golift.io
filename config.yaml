@@ -1,6 +1,19 @@
-# This is host path used for godoc links, etc.
+# Used as the title of the index page.
+title: Go Lift Code
+
+# Displayed as links on the index page.
+links:
+  - title: Docker
+    url: https://hub.docker.com/u/golift
+  - title: GitHub
+    url: https://github.com/golift
+
+# This is the host path used for godoc links, etc.
 # Determined automatically if not set here.
 host: code.golift.io
+
+# If this is set, a source link is displayed on the index page.
+src: /source
 
 # This controls the max-age cache-control value.
 # This setting is global, can be set per path too.
@@ -14,6 +27,7 @@ cache_max_age: 86400
 # $redir + $subpath (subpath doesn't contain matched $path)
 redir_paths: ["tar.gz", "wiki", "releases"]
 
+# Paths that get handled by this app.
 paths:
   /badge:
     repo: https://github.com/golift/badge
@@ -48,3 +62,6 @@ paths:
     redir: https://github.com/davidnewhall/secspy
   /unpacker-poller:
     redir: https://github.com/davidnewhall/unpacker-poller
+  /source:
+    redir_paths: [""]
+    redir: https://github.com/golift/code.golift.io

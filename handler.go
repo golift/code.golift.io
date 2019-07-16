@@ -32,10 +32,16 @@ type Handler struct {
 
 // Config contains the config file data.
 type Config struct {
-	Host       string                 `yaml:"host,omitempty"`
+	Title string `yaml:"title,omitempty"`
+	Host  string `yaml:"host,omitempty"`
+	Links []struct {
+		Title string `yaml:"title,omitempty"`
+		URL   string `yaml:"url,omitempty"`
+	} `yaml:"links,omitempty"`
 	CacheAge   *uint64                `yaml:"cache_max_age,omitempty"`
 	Paths      map[string]*PathConfig `yaml:"paths,omitempty"`
 	RedirPaths []string               `yaml:"redir_paths,omitempty"`
+	Src        string                 `yaml:"src,omitempty"`
 }
 
 // PathConfigs contains our list of configured routing-paths.
@@ -58,10 +64,14 @@ func newHandler(configData []byte) (*Handler, error) {
 	if err := yaml.Unmarshal(configData, h.Config); err != nil {
 		return nil, err
 	}
+	if h.Title == "" {
+		h.Title = h.Host
+	}
 	cacheControl := fmt.Sprintf("public, max-age=86400") // 24 hours (in seconds)
 	if h.CacheAge != nil {
 		cacheControl = fmt.Sprintf("public, max-age=%d", *h.CacheAge)
 	}
+
 	for path, e := range h.Config.Paths {
 		h.Config.Paths[path].Path = strings.TrimSuffix(path, "/")
 		if len(e.RedirPaths) < 1 {

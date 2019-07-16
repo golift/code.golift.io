@@ -15,19 +15,23 @@ var indexTmpl = template.Must(template.New("index").Parse(`<!DOCTYPE html>
     }
     li { flex: 0 0 33%; }
     li { text-align: center; }
-    li:nth-child(n) { background-color: lightblue; }
-    li:nth-child(6n+4) { background-color: pink; }
-    li:nth-child(6n+5) { background-color: pink; }
-    li:nth-child(6n+6) { background-color: pink; }
+    li:nth-child(n) { background-color: #eed; }
+    li:nth-child(6n+4) { background-color: lightgray; }
+    li:nth-child(6n+5) { background-color: lightgray; }
+    li:nth-child(6n+6) { background-color: lightgray; }
     </style>
   </head>
   <body>
-    <h1><a href="https://code.golift.io/">Go Lift Code</a></h1>
-    <h2><a href="https://github.com/golift/">GitHub</a> - <a href="https://hub.docker.com/u/golift">Docker</a></h2>
+    <h1><a href="https://{{.Host}}/">{{.Title}}</a></h1>
+    {{range .Links -}}
+    <h3><a href="{{.URL}}">{{.Title}}</a></h3>
+    {{end -}}
     <ul>
     {{range .Paths}}{{if ne .Repo ""}}  <li>{{.Path}}</li><li><a href="https://godoc.org/{{$.Host}}{{.Path}}">GoDoc</a></li><li><a href="{{.Repo}}">Code</a></li>
     {{end}}{{end}}</ul>
-    (<a href="https://github.com/golift/code.golift.io">source</a>)
+{{if ne .Src "" -}}
+    (<a href="{{.Src}}">source</a>)
+{{end -}}
   </body>
 </html>
 `))
