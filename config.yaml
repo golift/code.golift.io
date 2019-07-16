@@ -12,7 +12,7 @@ links:
   - title: GitHub
     url: https://github.com/golift
 
-# If this is set, a source link (to this path) is displayed on the index page.
+# If this is set, a source link to this path is displayed on the index page.
 # protip: setup a redirect for /source - see below.
 src: /source
 
