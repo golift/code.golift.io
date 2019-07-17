@@ -21,11 +21,13 @@ import (
 	"log"
 	"net/http"
 
+	"code.golift.io/badgedata"
+	_ "code.golift.io/badgedata/grafana"
 	"google.golang.org/appengine"
 )
 
 func main() {
-	vanity, err := ioutil.ReadFile("./vanity.yaml")
+	vanity, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 	http.Handle("/", h)
+	http.Handle("/bd/", badgedata.Handler())
 	appengine.Main()
 }
 

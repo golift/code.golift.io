@@ -237,10 +237,10 @@ func TestPathConfigSetFind(t *testing.T) {
 			want:  "/y",
 		},
 		{
-			paths: []string{"/example/helloworld", "/", "/y", "/foo"},
-			query: "/x/y/",
-			want:  "/",
-			subpath:  "x/y/",
+			paths:   []string{"/example/helloworld", "/", "/y", "/foo"},
+			query:   "/x/y/",
+			want:    "/",
+			subpath: "x/y/",
 		},
 		{
 			paths: []string{"/example/helloworld", "/y", "/foo"},
@@ -255,19 +255,19 @@ func TestPathConfigSetFind(t *testing.T) {
 		return s
 	}
 	for _, test := range tests {
-		pset := make(pathConfigSet, len(test.paths))
+		pset := make(PathConfigs, len(test.paths))
 		for i := range test.paths {
-			pset[i].path = test.paths[i]
+			pset[i] = &PathConfig{Path: test.paths[i]}
 		}
 		sort.Sort(pset)
-		pc, subpath := pset.find(test.query)
+		pc := pset.find(test.query)
 		var got string
-		if pc != nil {
-			got = pc.path
+		if pc.PathConfig != nil {
+			got = pc.Path
 		}
-		if got != test.want || subpath != test.subpath {
+		if got != test.want || pc.Subpath != test.subpath {
 			t.Errorf("pathConfigSet(%v).find(%q) = %v, %v; want %v, %v",
-				test.paths, test.query, emptyToNil(got), subpath, emptyToNil(test.want), test.subpath)
+				test.paths, test.query, emptyToNil(got), pc.Subpath, emptyToNil(test.want), test.subpath)
 		}
 	}
 }
