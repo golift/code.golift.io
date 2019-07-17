@@ -41,11 +41,11 @@ var indexTmpl = template.Must(template.New("index").Parse(`<!DOCTYPE html>
 var vanityTmpl = template.Must(template.New("vanity").Parse(`<!DOCTYPE html>
 <html>
   <head>
-    <link rel='icon' href='/favicon.ico' type='image/x-icon'/ >
+    <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="go-import" content="{{.Host}}{{.Path}} {{.VCS}} {{.Repo}}">
-    <meta name="go-source" content="{{.Host}}{{.Path}} {{.Display}}">
-    <meta http-equiv="refresh" content="0; url=https://godoc.org/{{.Host}}{{.Path}}/{{.Subpath}}">
+    <meta name="go-import" content="{{.Host}}{{.Path}} {{.VCS}} {{.Repo}}"/>
+    <meta name="go-source" content="{{.Host}}{{.Path}} {{.Display}}"/>
+    <meta http-equiv="refresh" content="0; url=https://godoc.org/{{.Host}}{{.Path}}/{{.Subpath}}"/>
   </head>
   <body>
     Nothing to see here; <a href="https://godoc.org/{{.Host}}{{.Path}}/{{.Subpath}}">See the package on godoc</a>.
