@@ -19,19 +19,9 @@ This is the source that runs [https://code.golift.io](https://code.golift.io).
 -   Path redirects. Issue 302s for specific paths.
     -   Useful for redirecting to download links on GitHub.
 
-#### TODO
-Incorporate a badge package for data collection and return.
-In other words, I want to make this app collect data from "things"
+#### Other
+Incorporated a badge package for data collection and return.
+In other words this app can collect data from "things"
 (like the public grafana api) and store that data for later requests.
-I will use this to populate badge/shield data for things like "grafana
-dashboard download counter"
-```json
-{
-  "subject": "leftSide",
-  "status": "rightSide",
-  "color": "blue"
-}
-```
-```
-/https/code.golift.io/badge/grafana/dashboard/downloads/id+id+id+id
-```
+I use this to populate badge/shield data for things like "grafana
+dashboard download counter" - [https://github.com/golift/badgedata](https://github.com/golift/badgedata)

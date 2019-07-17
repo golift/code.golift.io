@@ -21,6 +21,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"code.golift.io/badgedata"
+	_ "code.golift.io/badgedata/grafana"
 )
 
 func main() {
@@ -41,6 +44,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	http.Handle("/bd/", badgedata.Handler())
 	http.Handle("/", h)
 	log.Println("Listening at http://127.0.0.1:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

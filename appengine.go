@@ -21,6 +21,8 @@ import (
 	"log"
 	"net/http"
 
+	"code.golift.io/badgedata"
+	_ "code.golift.io/badgedata/grafana"
 	"google.golang.org/appengine"
 )
 
@@ -34,6 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 	http.Handle("/", h)
+	http.Handle("/bd/", badgedata.Handler())
 	appengine.Main()
 }
 

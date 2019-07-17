@@ -30,9 +30,9 @@ redir_paths: ["tar.gz", "wiki", "releases"]
 
 # Paths that get handled by this app.
 paths:
-  /badge:
-    repo: https://github.com/golift/badge
-    redir: https://github.com/golift/badge
+  /badgedata:
+    repo: https://github.com/golift/badgedata
+    redir: https://github.com/golift/badgedata
   /unifi:
     repo: https://github.com/golift/unifi
     redir: https://github.com/golift/unifi
