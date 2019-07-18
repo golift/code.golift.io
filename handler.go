@@ -173,9 +173,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	// Redirect for file downloads.
-	if pc.Redir != "" && StringInSlices(pc.Subpath, pc.RedirPaths) {
+	if pc.RedirectablePath() {
+		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
 		http.Redirect(w, r, redirTo, 302)
 		return
@@ -207,12 +206,15 @@ func (h *Handler) Hostname(r *http.Request) string {
 	return appHost
 }
 
-// StringInSlices checks if a string exists in a list of strings.
+// RedirectablePath checks if a string exists in a list of strings.
 // Used to determine if a sub path should be redirected or not.
 // Not used for normal vanity URLs, only used for `redir`.
-func StringInSlices(str string, slice []string) bool {
-	for _, s := range slice {
-		if strings.Contains(str, s) {
+func (p *PathReq) RedirectablePath() bool {
+	if p.Redir == "" {
+		return false
+	}
+	for _, s := range p.RedirPaths {
+		if strings.Contains(p.Subpath, s) {
 			return true
 		}
 	}
