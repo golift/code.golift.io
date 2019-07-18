@@ -83,7 +83,8 @@ func newHandler(configData []byte) (*Handler, error) {
 	}
 
 	for p, e := range h.Paths {
-		h.Paths[p].Path = strings.TrimSuffix(p, "/")
+		h.Paths[p].Path = p
+
 		if len(e.RedirPaths) < 1 {
 			// was not provided, pass in global value.
 			e.RedirPaths = h.RedirPaths
@@ -149,6 +150,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Create a vanity redirect page.
 	w.Header().Set("Cache-Control", pc.cacheControl)
 	pc.Host = h.Hostname(r)
+	pc.Path = strings.TrimSuffix(pc.Path, "/")
 	if err := vanityTmpl.Execute(w, pc); err != nil {
 		http.Error(w, "cannot render the page", http.StatusInternalServerError)
 	}

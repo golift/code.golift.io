@@ -97,6 +97,17 @@ func TestHandler(t *testing.T) {
 			goImport: "example.com/portmidi git https://github.com/rakyll/portmidi",
 			goSource: "example.com/portmidi https://github.com/rakyll/portmidi _ _",
 		},
+		{
+			name: "root path",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /:\n" +
+				"    repo: https://github.com/rakyll/portmidi\n" +
+				"    display: https://github.com/rakyll/portmidi _ _\n",
+			path:     "/foo/foo",
+			goImport: "example.com git https://github.com/rakyll/portmidi",
+			goSource: "example.com https://github.com/rakyll/portmidi _ _",
+		},
 	}
 	for _, test := range tests {
 		h, err := newHandler([]byte(test.config))
@@ -176,6 +187,11 @@ func TestPathConfigSetFind(t *testing.T) {
 		want    string
 		subpath string
 	}{
+		{
+			paths: []string{"/"},
+			query: "/",
+			want:  "/",
+		},
 		{
 			paths: []string{"/portmidi"},
 			query: "/portmidi",
