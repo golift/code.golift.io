@@ -109,6 +109,50 @@ func TestHandler(t *testing.T) {
 			goSource: "example.com https://github.com/rakyll/portmidi _ _",
 		},
 		{
+			name: "wildcard with sub path",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /rakyll/:\n" +
+				"    repo: https://github.com/rakyll/\n" +
+				"    wildcard: true\n",
+			path:     "/rakyll/repo/foo",
+			goImport: "example.com/rakyll/repo git https://github.com/rakyll/repo",
+			goSource: "example.com/rakyll/repo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+		},
+		{
+			name: "wildcard with no slashes",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /rakyll/:\n" +
+				"    repo: https://github.com/rakyll/\n" +
+				"    wildcard: true\n",
+			path:     "/rakyll/repo",
+			goImport: "example.com/rakyll/repo git https://github.com/rakyll/repo",
+			goSource: "example.com/rakyll/repo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+		},
+		{
+			name: "wildcard with dashes",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /rakyll-:\n" +
+				"    repo: https://github.com/rakyll/\n" +
+				"    wildcard: true\n",
+			path:     "/rakyll-repo",
+			goImport: "example.com/rakyll-repo git https://github.com/rakyll/repo",
+			goSource: "example.com/rakyll-repo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+		},
+		{
+			name: "wildcard bare word",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /rakyll:\n" +
+				"    repo: https://github.com/rakyll/\n" +
+				"    wildcard: true\n",
+			path:     "/rakyllrepo",
+			goImport: "example.com/rakyllrepo git https://github.com/rakyll/repo",
+			goSource: "example.com/rakyllrepo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+		},
+		{
 			name: "display Gitlab inference",
 			config: "host: example.com\n" +
 				"paths:\n" +

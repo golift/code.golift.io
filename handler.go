@@ -76,7 +76,6 @@ type PathConfig struct {
 type PathReq struct {
 	Host    string
 	Subpath string
-	ReqPath string
 	*PathConfig
 }
 
@@ -176,7 +175,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Create a vanity redirect page.
 	w.Header().Set("Cache-Control", pc.cacheControl)
 	pc.Host = h.Hostname(r)
-	pc.ReqPath = strings.TrimSuffix(pc.Path, "/")
 	if err := vanityTmpl.Execute(w, &pc); err != nil {
 		http.Error(w, "cannot render the page", http.StatusInternalServerError)
 	}
@@ -211,35 +209,35 @@ func (p *PathReq) RedirectablePath() bool {
 
 // ImportPath is used in the template to generate the import path.
 func (p *PathReq) ImportPath() string {
-	path := p.ReqPath
-	repo := strings.TrimSuffix(p.Repo, "/")
+	path := p.Path
+	repo := p.Repo
 	if p.Wildcard {
 		sub := strings.Split(p.Subpath, "/")[0]
-		path += "/" + sub
-		repo += "/" + sub
+		path += sub
+		repo += sub
 	}
-	return p.Host + path + " " + p.VCS + " " + repo
+	return p.Host + strings.TrimSuffix(path, "/") + " " + p.VCS + " " + repo
 }
 
 // SourcePath is used in the template to generate the source path.
 func (p *PathReq) SourcePath() string {
 	if p.Display != "" {
-		return p.Host + p.ReqPath + " " + p.Display
+		return p.Host + strings.TrimSuffix(p.Path, "/") + " " + p.Display
 	}
 	// TODO: add branch control.
 	template := "%v%v %v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}"
 	if strings.HasPrefix(p.Repo, "https://bitbucket.org") {
 		template = "%v%v %v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}"
 	}
-	path := p.ReqPath
-	repo := strings.TrimSuffix(p.Repo, "/")
+	path := p.Path
+	repo := p.Repo
 	if p.Wildcard {
 		sub := strings.Split(p.Subpath, "/")[0]
-		path += "/" + sub
-		repo += "/" + sub
+		path += sub
+		repo += sub
 	}
 	// github, gitlab, git, svn, hg, bzr - may need more tweaking for some of these.
-	return fmt.Sprintf(template, p.Host, path, repo, repo, repo)
+	return fmt.Sprintf(template, p.Host, strings.TrimSuffix(path, "/"), repo, repo, repo)
 }
 
 // GoDocPath is used in the template to generate the GoDoc path.
@@ -247,7 +245,7 @@ func (p *PathReq) GoDocPath() string {
 	if p.Wildcard {
 		return p.Host + "/" + p.Subpath
 	}
-	return p.Host + p.ReqPath + "/" + p.Subpath
+	return p.Host + p.Path + "/" + p.Subpath
 }
 
 // Len is a sort.Sort interface method.
