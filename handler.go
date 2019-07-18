@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strings"
 
+	"google.golang.org/appengine"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -155,10 +156,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Hostname returns the appropriate Host header for this request.
 func (h *Handler) Hostname(r *http.Request) string {
-	if h.Host == "" {
-		return defaultHost(r)
+	if h.Host != "" {
+		return h.Host
 	}
-	return h.Host
+	appHost := appengine.DefaultVersionHostname(appengine.NewContext(r))
+	if appHost == "" {
+		return r.Host
+	}
+	return appHost
 }
 
 // StringInSlices checks if a string exists in a list of strings.
