@@ -15,6 +15,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,43 +24,39 @@ import (
 
 	"code.golift.io/badgedata"
 	_ "code.golift.io/badgedata/grafana"
-	"google.golang.org/appengine"
 )
 
 func main() {
-	var configPath string
-	switch len(os.Args) {
-	case 1:
-		configPath = "config.yaml"
-	case 2:
-		configPath = os.Args[1]
-	default:
-		log.Fatal("usage: govanityurls [CONFIG]")
+	listenAddr := os.Getenv("PORT")
+	if listenAddr == "" {
+		listenAddr = ":8080"
 	}
-	vanity, err := ioutil.ReadFile(configPath)
+	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTP server listen address")
+	configPath := flag.String("config", "./config.yaml", "config file path")
+	flag.Usage = func() {
+		fmt.Println("Usage: govanityurls [-config <config-file>] [-listen <listen-address>]")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	vanity, err := ioutil.ReadFile(*configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	h, err := newHandler(vanity)
+	vanityHandler, err := newHandler(vanity)
 	if err != nil {
 		log.Fatal(err)
 	}
 	http.Handle("/bd/", badgedata.Handler())
-	http.Handle("/", h)
-	port := ":" + os.Getenv("PORT")
-	if port == ":" {
-		port = ":8080"
+	http.Handle("/", vanityHandler)
+	// msg is only used to print a message. Useful to know when the app has
+	// finished starting and provides a clickable link to get right to it.
+	msg := listenAddr
+	if msg[0] == ':' {
+		msg = "127.0.0.1" + msg
 	}
-	log.Println("Listening at http://127.0.0.1" + port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	log.Println("Listening at http://" + msg)
+	if err := http.ListenAndServe(listenAddr, nil); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func defaultHost(r *http.Request) string {
-	host := appengine.DefaultVersionHostname(appengine.NewContext(r))
-	if host == "" {
-		return r.Host
-	}
-	return host
 }

@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strings"
 
+	"google.golang.org/appengine"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -28,6 +29,15 @@ import (
 type Handler struct {
 	*Config
 	PathConfigs
+}
+
+// vcsPrefixMap provides defaults for VCS type if it's not provided.
+// The list of strings is used in strings.HasPrefix().
+var vcsPrefixMap = map[string][]string{
+	"git": []string{"https://git", "https://bitbucket"},
+	"bzr": []string{"https://bazaar"},
+	"hg":  []string{"https://hg.", "https://mercurial"},
+	"svn": []string{"https://svn."},
 }
 
 // Config contains the config file data.
@@ -80,46 +90,77 @@ func newHandler(configData []byte) (*Handler, error) {
 	if h.CacheAge != nil {
 		cacheControl = fmt.Sprintf("public, max-age=%d", *h.CacheAge)
 	}
-
-	for p, e := range h.Paths {
-		h.Paths[p].Path = strings.TrimSuffix(p, "/")
-		if len(e.RedirPaths) < 1 {
+	for p := range h.Paths {
+		h.Paths[p].Path = p
+		if len(h.Paths[p].RedirPaths) < 1 {
 			// was not provided, pass in global value.
-			e.RedirPaths = h.RedirPaths
+			h.Paths[p].RedirPaths = h.RedirPaths
 		}
-		h.Paths[p].cacheControl = cacheControl
-		if e.CacheAge != nil {
-			// provided, override global value.
-			h.Paths[p].cacheControl = fmt.Sprintf("public, max-age=%d", *e.CacheAge)
+		h.Paths[p].setRepoCacheControl(cacheControl)
+		h.Paths[p].setRepoDisplay()
+		if err := h.Paths[p].setRepoVCS(); err != nil {
+			return nil, err
 		}
-
-		switch {
-		case e.Display != "":
-			// Already filled in.
-		case strings.HasPrefix(e.Repo, "https://github.com/"):
-			h.Paths[p].Display = fmt.Sprintf("%v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}", e.Repo, e.Repo, e.Repo)
-		case strings.HasPrefix(e.Repo, "https://bitbucket.org"):
-			h.Paths[p].Display = fmt.Sprintf("%v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}", e.Repo, e.Repo, e.Repo)
-		}
-
-		switch {
-		case e.VCS != "":
-			// Already filled in.
-			if e.VCS != "bzr" && e.VCS != "git" && e.VCS != "hg" && e.VCS != "svn" {
-				return nil, fmt.Errorf("configuration for %v: unknown VCS %s", p, e.VCS)
-			}
-		case strings.HasPrefix(e.Repo, "https://github.com/"):
-			h.Paths[p].VCS = "git"
-		case e.Repo == "" && e.Redir != "":
-			// Redirect-only can go anywhere.
-		default:
-			return nil, fmt.Errorf("configuration for %v: cannot infer VCS from %s", p, e.Repo)
-		}
-
-		h.PathConfigs = append(h.PathConfigs, e)
+		h.PathConfigs = append(h.PathConfigs, h.Paths[p])
 	}
 	sort.Sort(h.PathConfigs)
 	return h, nil
+}
+
+func (p *PathConfig) setRepoCacheControl(cc string) {
+	p.cacheControl = cc
+	if p.CacheAge != nil {
+		// provided, override global value.
+		p.cacheControl = fmt.Sprintf("public, max-age=%d", *p.CacheAge)
+	}
+}
+
+// Set display path.
+func (p *PathConfig) setRepoDisplay() {
+	if p.Display != "" {
+		return
+	}
+	// github, gitlab, git, svn, hg, bzr - may need more tweaking for some of these.
+	p.Display = fmt.Sprintf("%v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}", p.Repo, p.Repo, p.Repo)
+	if strings.HasPrefix(p.Repo, "https://bitbucket.org") {
+		// bitbucket is weird.
+		p.Display = fmt.Sprintf("%v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}", p.Repo, p.Repo, p.Repo)
+	}
+}
+
+// setRepoVCS makes sure the provides VCS type is supported,
+// or sets it automatically based on the repo's prefix.
+func (p *PathConfig) setRepoVCS() error {
+	// Check and set VCS type.
+	switch {
+	case p.Repo == "" && p.Redir != "":
+		// Redirect-only can go anywhere.
+	case p.VCS == "github" || p.VCS == "gitlab" || p.VCS == "bitbucket":
+		p.VCS = "git"
+	case p.VCS == "":
+		// Try to figure it out.
+		var err error
+		p.VCS, err = findRepoVCS(p.Repo)
+		return err
+	default:
+		// Already filled in, make sure it's supported.
+		if _, ok := vcsPrefixMap[p.VCS]; !ok {
+			return fmt.Errorf("configuration for %v: unknown VCS %s", p, p.VCS)
+		}
+	}
+	return nil
+}
+
+// findRepoVCS checks the vcsMapList for a supported vcs type based on a repo's prefix.
+func findRepoVCS(repo string) (string, error) {
+	for vcs, prefixList := range vcsPrefixMap {
+		for _, prefix := range prefixList {
+			if strings.HasPrefix(repo, prefix) {
+				return vcs, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("cannot infer VCS from %s", repo)
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -132,9 +173,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	// Redirect for file downloads.
-	if pc.Redir != "" && StringInSlices(pc.Subpath, pc.RedirPaths) {
+	if pc.RedirectablePath() {
+		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
 		http.Redirect(w, r, redirTo, 302)
 		return
@@ -148,6 +188,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Create a vanity redirect page.
 	w.Header().Set("Cache-Control", pc.cacheControl)
 	pc.Host = h.Hostname(r)
+	pc.Path = strings.TrimSuffix(pc.Path, "/")
 	if err := vanityTmpl.Execute(w, pc); err != nil {
 		http.Error(w, "cannot render the page", http.StatusInternalServerError)
 	}
@@ -155,17 +196,25 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Hostname returns the appropriate Host header for this request.
 func (h *Handler) Hostname(r *http.Request) string {
-	if h.Host == "" {
-		return defaultHost(r)
+	if h.Host != "" {
+		return h.Host
 	}
-	return h.Host
+	appHost := appengine.DefaultVersionHostname(appengine.NewContext(r))
+	if appHost == "" {
+		return r.Host
+	}
+	return appHost
 }
 
-// StringInSlices checks if a string exists in a list of strings.
-// Used to determine if a sub path shouuld be redirected or not.
-func StringInSlices(str string, slice []string) bool {
-	for _, s := range slice {
-		if strings.Contains(str, s) {
+// RedirectablePath checks if a string exists in a list of strings.
+// Used to determine if a sub path should be redirected or not.
+// Not used for normal vanity URLs, only used for `redir`.
+func (p *PathReq) RedirectablePath() bool {
+	if p.Redir == "" {
+		return false
+	}
+	for _, s := range p.RedirPaths {
+		if strings.Contains(p.Subpath, s) {
 			return true
 		}
 	}

@@ -97,6 +97,38 @@ func TestHandler(t *testing.T) {
 			goImport: "example.com/portmidi git https://github.com/rakyll/portmidi",
 			goSource: "example.com/portmidi https://github.com/rakyll/portmidi _ _",
 		},
+		{
+			name: "root path",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /:\n" +
+				"    repo: https://github.com/rakyll/portmidi\n" +
+				"    display: https://github.com/rakyll/portmidi _ _\n",
+			path:     "/foo/foo",
+			goImport: "example.com git https://github.com/rakyll/portmidi",
+			goSource: "example.com https://github.com/rakyll/portmidi _ _",
+		},
+		{
+			name: "display Gitlab inference",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /portmidi:\n" +
+				"    repo: https://gitlab.com/rakyll/portmidi\n",
+			path:     "/portmidi",
+			goImport: "example.com/portmidi git https://gitlab.com/rakyll/portmidi",
+			goSource: "example.com/portmidi https://gitlab.com/rakyll/portmidi https://gitlab.com/rakyll/portmidi/tree/master{/dir} https://gitlab.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
+		},
+		{
+			name: "display Gitlab inference",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /portmidi:\n" +
+				"    vcs: gitlab\n" +
+				"    repo: https://gitlab.com/rakyll/portmidi\n",
+			path:     "/portmidi",
+			goImport: "example.com/portmidi git https://gitlab.com/rakyll/portmidi",
+			goSource: "example.com/portmidi https://gitlab.com/rakyll/portmidi https://gitlab.com/rakyll/portmidi/tree/master{/dir} https://gitlab.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
+		},
 	}
 	for _, test := range tests {
 		h, err := newHandler([]byte(test.config))
@@ -134,10 +166,10 @@ func TestBadConfigs(t *testing.T) {
 	badConfigs := []string{
 		"paths:\n" +
 			"  /missingvcs:\n" +
-			"    repo: https://bitbucket.org/zombiezen/gopdf\n",
+			"    repo: https://unknownbucket.org/zombiezen/gopdf\n",
 		"paths:\n" +
 			"  /unknownvcs:\n" +
-			"    repo: https://bitbucket.org/zombiezen/gopdf\n" +
+			"    repo: https://unknownbucket.org/zombiezen/gopdf\n" +
 			"    vcs: xyzzy\n",
 		"cache_max_age: -1\n" +
 			"paths:\n" +
@@ -176,6 +208,11 @@ func TestPathConfigSetFind(t *testing.T) {
 		want    string
 		subpath string
 	}{
+		{
+			paths: []string{"/"},
+			query: "/",
+			want:  "/",
+		},
 		{
 			paths: []string{"/portmidi"},
 			query: "/portmidi",
