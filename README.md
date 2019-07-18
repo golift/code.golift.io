@@ -28,4 +28,4 @@ Incorporated a badge package for data collection and return.
 In other words this app can collect data from "things"
 (like the public grafana api) and store that data for later requests.
 I use this to populate badge/shield data for things like "grafana
-dashboard download counter" - [https://github.com/golift/badgedata](https://github.com/golift/badgedata)
+dashboard download counter" - [https://github.com/golift/badgedata](https://github.com/golift/badgedata). It's [3 lines of code](https://github.com/golift/code.golift.io/commit/89451a0a783b9c1991313c0a5cc6e70e9c023e14#diff-7ddfb3e035b42cd70649cc33393fe32c) you can pull out real easy. 
