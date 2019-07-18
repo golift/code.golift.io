@@ -27,8 +27,8 @@ import (
 )
 
 func main() {
-	listenAddr := os.Getenv("PORT")
-	if listenAddr == "" {
+	listenAddr := ":" + os.Getenv("PORT")
+	if listenAddr == ":" {
 		listenAddr = ":8080"
 	}
 	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTP server listen address")
