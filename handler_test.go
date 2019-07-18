@@ -147,6 +147,7 @@ func TestHandler(t *testing.T) {
 				"paths:\n" +
 				"  /rakyll:\n" +
 				"    repo: https://github.com/rakyll/\n" +
+				"    cache_max_age: 99\n" +
 				"    wildcard: true\n",
 			path:     "/rakyllrepo",
 			goImport: "example.com/rakyllrepo git https://github.com/rakyll/repo",
