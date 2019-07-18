@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//+build !appengine
-
 package main
 
 import (
@@ -24,6 +22,7 @@ import (
 
 	"code.golift.io/badgedata"
 	_ "code.golift.io/badgedata/grafana"
+	"google.golang.org/appengine"
 )
 
 func main() {
@@ -46,12 +45,20 @@ func main() {
 	}
 	http.Handle("/bd/", badgedata.Handler())
 	http.Handle("/", h)
-	log.Println("Listening at http://127.0.0.1:8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	port := ":" + os.Getenv("PORT")
+	if port == ":" {
+		port = ":8080"
+	}
+	log.Println("Listening at http://127.0.0.1" + port)
+	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func defaultHost(r *http.Request) string {
-	return r.Host
+	host := appengine.DefaultVersionHostname(appengine.NewContext(r))
+	if host == "" {
+		return r.Host
+	}
+	return host
 }
