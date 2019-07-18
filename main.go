@@ -22,6 +22,7 @@ import (
 
 	"code.golift.io/badgedata"
 	_ "code.golift.io/badgedata/grafana"
+	"google.golang.org/appengine"
 )
 
 func main() {
@@ -55,5 +56,9 @@ func main() {
 }
 
 func defaultHost(r *http.Request) string {
-	return r.Host
+	host := appengine.DefaultVersionHostname(appengine.NewContext(r))
+	if host == "" {
+		return r.Host
+	}
+	return host
 }
