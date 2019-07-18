@@ -66,6 +66,7 @@ type PathConfig struct {
 	Redir        string   `yaml:"redir,omitempty"`
 	Display      string   `yaml:"display,omitempty"`
 	VCS          string   `yaml:"vcs,omitempty"`
+	Wildcard     bool     `yaml:"wildcard,omitempty"`
 	cacheControl string
 }
 
@@ -75,6 +76,7 @@ type PathConfig struct {
 type PathReq struct {
 	Host    string
 	Subpath string
+	ReqPath string
 	*PathConfig
 }
 
@@ -97,7 +99,6 @@ func newHandler(configData []byte) (*Handler, error) {
 			h.Paths[p].RedirPaths = h.RedirPaths
 		}
 		h.Paths[p].setRepoCacheControl(cacheControl)
-		h.Paths[p].setRepoDisplay()
 		if err := h.Paths[p].setRepoVCS(); err != nil {
 			return nil, err
 		}
@@ -112,19 +113,6 @@ func (p *PathConfig) setRepoCacheControl(cc string) {
 	if p.CacheAge != nil {
 		// provided, override global value.
 		p.cacheControl = fmt.Sprintf("public, max-age=%d", *p.CacheAge)
-	}
-}
-
-// Set display path.
-func (p *PathConfig) setRepoDisplay() {
-	if p.Display != "" {
-		return
-	}
-	// github, gitlab, git, svn, hg, bzr - may need more tweaking for some of these.
-	p.Display = fmt.Sprintf("%v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}", p.Repo, p.Repo, p.Repo)
-	if strings.HasPrefix(p.Repo, "https://bitbucket.org") {
-		// bitbucket is weird.
-		p.Display = fmt.Sprintf("%v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}", p.Repo, p.Repo, p.Repo)
 	}
 }
 
@@ -188,8 +176,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Create a vanity redirect page.
 	w.Header().Set("Cache-Control", pc.cacheControl)
 	pc.Host = h.Hostname(r)
-	pc.Path = strings.TrimSuffix(pc.Path, "/")
-	if err := vanityTmpl.Execute(w, pc); err != nil {
+	pc.ReqPath = strings.TrimSuffix(pc.Path, "/")
+	if err := vanityTmpl.Execute(w, &pc); err != nil {
 		http.Error(w, "cannot render the page", http.StatusInternalServerError)
 	}
 }
@@ -221,17 +209,58 @@ func (p *PathReq) RedirectablePath() bool {
 	return false
 }
 
-// Len is a sort.Search interface method.
+// ImportPath is used in the template to generate the import path.
+func (p *PathReq) ImportPath() string {
+	path := p.ReqPath
+	repo := strings.TrimSuffix(p.Repo, "/")
+	if p.Wildcard {
+		sub := strings.Split(p.Subpath, "/")[0]
+		path += "/" + sub
+		repo += "/" + sub
+	}
+	return p.Host + path + " " + p.VCS + " " + repo
+}
+
+// SourcePath is used in the template to generate the source path.
+func (p *PathReq) SourcePath() string {
+	if p.Display != "" {
+		return p.Host + p.ReqPath + " " + p.Display
+	}
+	// TODO: add branch control.
+	template := "%v%v %v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}"
+	if strings.HasPrefix(p.Repo, "https://bitbucket.org") {
+		template = "%v%v %v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}"
+	}
+	path := p.ReqPath
+	repo := strings.TrimSuffix(p.Repo, "/")
+	if p.Wildcard {
+		sub := strings.Split(p.Subpath, "/")[0]
+		path += "/" + sub
+		repo += "/" + sub
+	}
+	// github, gitlab, git, svn, hg, bzr - may need more tweaking for some of these.
+	return fmt.Sprintf(template, p.Host, path, repo, repo, repo)
+}
+
+// GoDocPath is used in the template to generate the GoDoc path.
+func (p *PathReq) GoDocPath() string {
+	if p.Wildcard {
+		return p.Host + "/" + p.Subpath
+	}
+	return p.Host + p.ReqPath + "/" + p.Subpath
+}
+
+// Len is a sort.Sort interface method.
 func (pset PathConfigs) Len() int {
 	return len(pset)
 }
 
-// Less is a sort.Search interface method.
+// Less is a sort.Sort interface method.
 func (pset PathConfigs) Less(i, j int) bool {
 	return pset[i].Path < pset[j].Path
 }
 
-// Swap is a sort.Search interface method.
+// Swap is a sort.Sort interface method.
 func (pset PathConfigs) Swap(i, j int) {
 	pset[i], pset[j] = pset[j], pset[i]
 }
@@ -243,9 +272,12 @@ func (pset PathConfigs) find(path string) PathReq {
 		return pset[i].Path >= path
 	})
 	if i < len(pset) && pset[i].Path == path {
+		// We have an exact match to a configured path.
 		return PathReq{PathConfig: pset[i]}
 	}
+	// This attempts to match /some/path/here but not /some/pathhere
 	if i > 0 && strings.HasPrefix(path, pset[i-1].Path+"/") {
+		// We have a partial match with a subpath!
 		return PathReq{
 			PathConfig: pset[i-1],
 			Subpath:    path[len(pset[i-1].Path)+1:],
@@ -253,8 +285,8 @@ func (pset PathConfigs) find(path string) PathReq {
 	}
 
 	// Slow path, now looking for the longest prefix/shortest subpath i.e.
-	// e.g. given pset ["/", "/abc/", "/abc/def/", "/xyz"/]
-	//  * query "/abc/foo" returns "/abc/" with a subpath of "foo"
+	// e.g. given pset ["/", "/abc", "/abc/def", "/xyz"]
+	//  * query "/abc/foo" returns "/abc" with a subpath of "foo"
 	//  * query "/x" returns "/" with a subpath of "x"
 	lenShortestSubpath := len(path)
 	var p PathReq
@@ -263,14 +295,16 @@ func (pset PathConfigs) find(path string) PathReq {
 	// nothing greater than i will be a prefix of path.
 	max := i
 	for i := 0; i < max; i++ {
-		ps := pset[i]
-		if len(ps.Path) >= len(path) {
-			// We previously didn't find the path by search, so any
-			// route with equal or greater length is NOT a match.
+		if len(pset[i].Path) >= len(path) {
+			// We previously didn't find the request path by search, so any
+			// configured path with equal or greater length is NOT a match.
 			continue
 		}
-		sSubpath := strings.TrimPrefix(path, ps.Path)
+		sSubpath := strings.TrimPrefix(path, pset[i].Path)
 		if len(sSubpath) < lenShortestSubpath {
+			// We get into this if statement only if TrimPrefix trimmed something.
+			// Then we try the next path, and check to see if what's left after we
+			// trimmed the configured path off is shorter than this one. /x is better than /xyz.
 			p.Subpath = sSubpath
 			lenShortestSubpath = len(sSubpath)
 			p.PathConfig = pset[i]

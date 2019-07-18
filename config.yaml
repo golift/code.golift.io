@@ -58,6 +58,15 @@ paths:
   /securityspy:
     repo: https://github.com/golift/securityspy
     redir: https://github.com/golift/securityspy
+
+  # Unused Examples.
+  /david/:
+    repo: https://github.com/davidnewhall/
+    wildcard: true
+  /captain-:
+    repo: https://github.com/davidnewhall/
+    wildcard: true
+
   # No repos.
   /unifi-poller:
     redir: https://github.com/davidnewhall/unifi-poller
