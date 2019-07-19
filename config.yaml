@@ -38,8 +38,11 @@ paths:
     redir: https://github.com/golift/unifi
     cache_max_age: 2345
   /deluge:
-    repo: https://github.com/golift/deluge
+    repo: https://code.golift.io/deluge
     redir: https://github.com/golift/deluge
+    vcs: git
+    redir_paths: [""]
+
   /imessage:
     repo: https://github.com/golift/imessage
     redir: https://github.com/golift/imessage
@@ -58,6 +61,13 @@ paths:
   /securityspy:
     repo: https://github.com/golift/securityspy
     redir: https://github.com/golift/securityspy
+
+  /sspy:
+    tags:
+      v1: v1
+      v2: v2
+      v3: 6209cbf016e87855484aa280b25ffa2cfba3fc3e
+    repo: https://github.com/golift/securityspy
 
   # Unused Examples.
   /david/:

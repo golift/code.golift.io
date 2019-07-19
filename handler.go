@@ -59,14 +59,15 @@ type PathConfigs []*PathConfig
 
 // PathConfig is the configuration for a single routing path.
 type PathConfig struct {
-	Path         string   `yaml:"-"`
-	CacheAge     *uint64  `yaml:"cache_max_age,omitempty"`
-	RedirPaths   []string `yaml:"redir_paths,omitempty"`
-	Repo         string   `yaml:"repo,omitempty"`
-	Redir        string   `yaml:"redir,omitempty"`
-	Display      string   `yaml:"display,omitempty"`
-	VCS          string   `yaml:"vcs,omitempty"`
-	Wildcard     bool     `yaml:"wildcard,omitempty"`
+	Path         string            `yaml:"-"`
+	CacheAge     *uint64           `yaml:"cache_max_age,omitempty"`
+	RedirPaths   []string          `yaml:"redir_paths,omitempty"`
+	Repo         string            `yaml:"repo,omitempty"`
+	Redir        string            `yaml:"redir,omitempty"`
+	Display      string            `yaml:"display,omitempty"`
+	VCS          string            `yaml:"vcs,omitempty"`
+	Wildcard     bool              `yaml:"wildcard,omitempty"`
+	Tags         map[string]string `yaml:"tags,omitempty"`
 	cacheControl string
 }
 
@@ -76,6 +77,7 @@ type PathConfig struct {
 type PathReq struct {
 	Host    string
 	Subpath string
+	Tag     string
 	*PathConfig
 }
 
@@ -163,6 +165,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if pc.RedirectablePath() {
 		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
+		// TODO: Check this works. Test?
 		http.Redirect(w, r, redirTo, 302)
 		return
 	}
@@ -210,13 +213,14 @@ func (p *PathReq) RedirectablePath() bool {
 // ImportPath is used in the template to generate the import path.
 func (p *PathReq) ImportPath() string {
 	path := p.Path
+	_, stag := p.GetTag()
 	repo := p.Repo
 	if p.Wildcard {
 		sub := strings.Split(p.Subpath, "/")[0]
 		path += sub
 		repo += sub
 	}
-	return p.Host + strings.TrimSuffix(path, "/") + " " + p.VCS + " " + repo
+	return fmt.Sprintf("%v%v%v %v %v", p.Host, strings.TrimSuffix(path, "/"), stag, p.VCS, repo)
 }
 
 // SourcePath is used in the template to generate the source path.
@@ -224,10 +228,13 @@ func (p *PathReq) SourcePath() string {
 	if p.Display != "" {
 		return p.Host + strings.TrimSuffix(p.Path, "/") + " " + p.Display
 	}
-	// TODO: add branch control.
-	template := "%v%v %v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}"
+	tag, stag := p.GetTag()
+	template := "%v%v%v %v %v/tree/%v{/dir} %v/blob/%v{/dir}/{file}#L{line}"
 	if strings.HasPrefix(p.Repo, "https://bitbucket.org") {
-		template = "%v%v %v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}"
+		if tag == "master" {
+			tag = "default"
+		}
+		template = "%v%v%v %v %v/src/%v{/dir} %v/src/%v{/dir}/{file}#{file}-{line}"
 	}
 	path := p.Path
 	repo := p.Repo
@@ -236,8 +243,24 @@ func (p *PathReq) SourcePath() string {
 		path += sub
 		repo += sub
 	}
+	// DO not include the middle rep path if we have a source tag.
+	mrepo := repo
+	if stag != "" {
+		mrepo = "_"
+	}
 	// github, gitlab, git, svn, hg, bzr - may need more tweaking for some of these.
-	return fmt.Sprintf(template, p.Host, strings.TrimSuffix(path, "/"), repo, repo, repo)
+	return fmt.Sprintf(template, p.Host, strings.TrimSuffix(path, "/"), stag, mrepo, repo, tag, repo, tag)
+}
+
+// GetTag is a helper to return the tag and branch for a request.
+func (p *PathReq) GetTag() (string, string) {
+	tag := "master"
+	stag := ""
+	if t, ok := p.Tags[p.Tag]; ok {
+		tag = t
+		stag = "." + p.Tag
+	}
+	return tag, stag
 }
 
 // GoDocPath is used in the template to generate the GoDoc path.
@@ -264,6 +287,12 @@ func (pset PathConfigs) Swap(i, j int) {
 }
 
 func (pset PathConfigs) find(path string) PathReq {
+	var p PathReq
+	sp := strings.Split(path, "/")             // get last path element.
+	sp = strings.SplitN(sp[len(sp)-1], ".", 2) // check if it has a dot.
+	if len(sp) == 2 {                          // dot at the end of a path refers to a tag.
+		p.Tag = sp[1] // Save the tag.
+	}
 	// Fast path with binary search to retrieve exact matches
 	// e.g. given pset ["/", "/abc", "/xyz"], path "/def" won't match.
 	i := sort.Search(len(pset), func(i int) bool {
@@ -271,15 +300,15 @@ func (pset PathConfigs) find(path string) PathReq {
 	})
 	if i < len(pset) && pset[i].Path == path {
 		// We have an exact match to a configured path.
-		return PathReq{PathConfig: pset[i]}
+		p.PathConfig = pset[i]
+		return p
 	}
 	// This attempts to match /some/path/here but not /some/pathhere
 	if i > 0 && strings.HasPrefix(path, pset[i-1].Path+"/") {
 		// We have a partial match with a subpath!
-		return PathReq{
-			PathConfig: pset[i-1],
-			Subpath:    path[len(pset[i-1].Path)+1:],
-		}
+		p.PathConfig = pset[i-1]
+		p.Subpath = path[len(pset[i-1].Path)+1:]
+		return p
 	}
 
 	// Slow path, now looking for the longest prefix/shortest subpath i.e.
@@ -287,7 +316,6 @@ func (pset PathConfigs) find(path string) PathReq {
 	//  * query "/abc/foo" returns "/abc" with a subpath of "foo"
 	//  * query "/x" returns "/" with a subpath of "x"
 	lenShortestSubpath := len(path)
-	var p PathReq
 
 	// After binary search with the >= lexicographic comparison,
 	// nothing greater than i will be a prefix of path.

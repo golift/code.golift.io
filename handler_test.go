@@ -154,6 +154,18 @@ func TestHandler(t *testing.T) {
 			goSource: "example.com/rakyllrepo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
 		},
 		{
+			name: "tag on the end",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /portmidi:\n" +
+				"    repo: https://gitlab.com/rakyll/portmidi\n" +
+				"    tags:\n" +
+				"      v1: sha_goes_here\n",
+			path:     "/portmidi.v1",
+			goImport: "example.com/portmidi.v1 git https://gitlab.com/rakyll/portmidi",
+			goSource: "example.com/portmidi.v1 _ https://gitlab.com/rakyll/portmidi/tree/sha_goes_here{/dir} https://gitlab.com/rakyll/portmidi/blob/sha_goes_here{/dir}/{file}#L{line}",
+		},
+		{
 			name: "display Gitlab inference",
 			config: "host: example.com\n" +
 				"paths:\n" +
