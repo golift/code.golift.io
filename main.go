@@ -21,25 +21,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"code.golift.io/badgedata"
 	_ "code.golift.io/badgedata/grafana"
 )
 
 func main() {
-	listenAddr := ":" + os.Getenv("PORT")
-	if listenAddr == ":" {
-		listenAddr = ":8080"
-	}
-	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTP server listen address")
-	configPath := flag.String("config", "./config.yaml", "config file path")
-	flag.Usage = func() {
-		fmt.Println("Usage: govanityurls [-config <config-file>] [-listen <listen-address>]")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
-
-	vanity, err := ioutil.ReadFile(*configPath)
+	listenAddr, configPath := parseFlags()
+	vanity, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,14 +39,26 @@ func main() {
 	}
 	http.Handle("/bd/", badgedata.Handler())
 	http.Handle("/", vanityHandler)
-	// msg is only used to print a message. Useful to know when the app has
-	// finished starting and provides a clickable link to get right to it.
-	msg := listenAddr
-	if msg[0] == ':' {
-		msg = "127.0.0.1" + msg
+	if strings.HasPrefix(listenAddr, ":") {
+		// A message so you know when it's started; a clickable link for dev'ing.
+		log.Println("Listening at http://127.0.0.1" + listenAddr)
 	}
-	log.Println("Listening at http://" + msg)
 	if err := http.ListenAndServe(listenAddr, nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func parseFlags() (string, string) {
+	listenAddr := ":" + os.Getenv("PORT")
+	if listenAddr == ":" {
+		listenAddr = ":8080"
+	}
+	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTP server listen address")
+	configPath := flag.String("config", "./config.yaml", "config file path")
+	flag.Usage = func() {
+		fmt.Println("Usage: vanityurls [-config <config-file>] [-listen <listen-address>]")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+	return listenAddr, *configPath
 }
