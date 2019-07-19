@@ -5,6 +5,7 @@ This is the source that runs [https://code.golift.io](https://code.golift.io).
 
 #### Fixes from [https://github.com/GoogleCloudPlatform/govanityurls](https://github.com/GoogleCloudPlatform/govanityurls)
 
+-   **Wildcard Support** Example: You can point a path (even /) to a github user/org. [#25](https://github.com/GoogleCloudPlatform/govanityurls/pull/25)
 -   App Engine Go 1.12. `go112` [#29](https://github.com/GoogleCloudPlatform/govanityurls/pull/29)
 -   Moved Templates to their own file.
 -   Cleaned up templates. Add some css, a little better formatting.
