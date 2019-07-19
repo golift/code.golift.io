@@ -58,6 +58,9 @@ paths:
   /securityspy:
     repo: https://github.com/golift/securityspy
     redir: https://github.com/golift/securityspy
+  /turbovanityurls:
+    repo: https://github.com/golift/turbovanityurls
+    redir: https://github.com/golift/turbovanityurls
 
   # Unused Examples.
   /david/:
