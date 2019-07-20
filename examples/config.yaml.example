@@ -1,4 +1,4 @@
-# [[ Production Configuration File for golift.io Code Repo ]]
+# TODO: provide more examples of what you can do in this config file.
 
 # This is the host path used for godoc links, etc.
 # Determined automatically if not set here.

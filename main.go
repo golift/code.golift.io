@@ -27,9 +27,23 @@ import (
 	_ "code.golift.io/badgedata/grafana"
 )
 
+// Version is injected at build time.
+var Version = "development"
+
+// Flags are the CLI flags.
+type Flags struct {
+	listenAddr string
+	configPath string
+	showVer    bool
+}
+
 func main() {
-	listenAddr, configPath := parseFlags()
-	vanity, err := ioutil.ReadFile(configPath)
+	flags := parseFlags()
+	if flags.showVer {
+		fmt.Printf("%v v%v\n", "turbovanityurls", Version)
+		os.Exit(0)
+	}
+	vanity, err := ioutil.ReadFile(flags.configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,26 +53,27 @@ func main() {
 	}
 	http.Handle("/bd/", badgedata.Handler())
 	http.Handle("/", vanityHandler)
-	if strings.HasPrefix(listenAddr, ":") {
+	if strings.HasPrefix(flags.listenAddr, ":") {
 		// A message so you know when it's started; a clickable link for dev'ing.
-		log.Println("Listening at http://127.0.0.1" + listenAddr)
+		log.Println("Listening at http://127.0.0.1" + flags.listenAddr)
 	}
-	if err := http.ListenAndServe(listenAddr, nil); err != nil {
+	if err := http.ListenAndServe(flags.listenAddr, nil); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func parseFlags() (string, string) {
-	listenAddr := ":" + os.Getenv("PORT")
-	if listenAddr == ":" {
-		listenAddr = ":8080"
+func parseFlags() *Flags {
+	f := &Flags{listenAddr: ":" + os.Getenv("PORT")}
+	if f.listenAddr == ":" {
+		f.listenAddr = ":8080"
 	}
-	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTP server listen address")
-	configPath := flag.String("config", "./config.yaml", "config file path")
+	flag.StringVar(&f.listenAddr, "l", f.listenAddr, "HTTP server listen address")
+	flag.StringVar(&f.configPath, "c", "./config.yaml", "config file path")
+	flag.BoolVar(&f.showVer, "v", false, "show version and exit")
 	flag.Usage = func() {
-		fmt.Println("Usage: vanityurls [-config <config-file>] [-listen <listen-address>]")
+		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-	return listenAddr, *configPath
+	return f
 }
