@@ -13,6 +13,11 @@ OPTIONS
 
     -c <config-file>
         Provide a configuration file (instead of the default).
+        The default is ./config.yaml, but this may change in the future.
+
+    -l <listen-addr>
+        Provide a listen address to bind to. Default is :$PORT. PORT is taken
+        from the environment. If PORT is unset the default is :8080.
 
     -v
         Display version and exit.
@@ -34,4 +39,4 @@ AUTHOR
 
 LOCATION
 ---
-*   Application Builder: [https://github.com/golift/turbovanityurls](https://github.com/golift/turbovanityurls)
+*   Turbo Vanity URLs: [https://github.com/golift/turbovanityurls](https://github.com/golift/turbovanityurls)

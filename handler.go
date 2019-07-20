@@ -34,10 +34,10 @@ type Handler struct {
 // vcsPrefixMap provides defaults for VCS type if it's not provided.
 // The list of strings is used in strings.HasPrefix().
 var vcsPrefixMap = map[string][]string{
-	"git": []string{"https://git", "https://bitbucket"},
-	"bzr": []string{"https://bazaar"},
-	"hg":  []string{"https://hg.", "https://mercurial"},
-	"svn": []string{"https://svn."},
+	"git": {"https://git", "https://bitbucket"},
+	"bzr": {"https://bazaar"},
+	"hg":  {"https://hg.", "https://mercurial"},
+	"svn": {"https://svn."},
 }
 
 // Config contains the config file data.
@@ -163,7 +163,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if pc.RedirectablePath() {
 		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
-		http.Redirect(w, r, redirTo, 302)
+		http.Redirect(w, r, redirTo, http.StatusFound)
 		return
 	}
 	if pc.Repo == "" {

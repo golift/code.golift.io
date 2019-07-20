@@ -27,6 +27,9 @@ import (
 	_ "code.golift.io/badgedata/grafana"
 )
 
+// Version is injected at build time.
+var Version = "development"
+
 func main() {
 	listenAddr, configPath := parseFlags()
 	vanity, err := ioutil.ReadFile(configPath)
@@ -53,12 +56,18 @@ func parseFlags() (string, string) {
 	if listenAddr == ":" {
 		listenAddr = ":8080"
 	}
-	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTP server listen address")
-	configPath := flag.String("config", "./config.yaml", "config file path")
+	flag.StringVar(&listenAddr, "l", listenAddr, "HTTP server listen address")
+	configPath := flag.String("c", "./config.yaml", "config file path")
+	showVer := flag.Bool("v", false, "show version and exit")
 	flag.Usage = func() {
-		fmt.Println("Usage: vanityurls [-config <config-file>] [-listen <listen-address>]")
+		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	if *showVer {
+		// move this into main.
+		fmt.Printf("%v v%v\n", "turbovanityurls", Version)
+		os.Exit(0)
+	}
 	return listenAddr, *configPath
 }
