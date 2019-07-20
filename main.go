@@ -23,8 +23,8 @@ import (
 	"os"
 	"strings"
 
-	"code.golift.io/badgedata"
-	_ "code.golift.io/badgedata/grafana"
+	"golift.io/badgedata"
+	_ "golift.io/badgedata/grafana"
 )
 
 // Version is injected at build time.

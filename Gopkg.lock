@@ -2,12 +2,9 @@
 
 
 [[projects]]
-  digest = "1:ea50aa10e6b121c25a0a80fa4cca594e882a606b0dc84cc57c1562e02bff6dfd"
+  digest = "1:f10dee3b90e57609bb157606e970ee65c826ad401dc50cefffe31b2276f34a9f"
   name = "code.golift.io/badgedata"
-  packages = [
-    ".",
-    "grafana",
-  ]
+  packages = ["."]
   pruneopts = "UT"
   revision = "acbbb17696cde0c13576ec0bde8edca29abaa449"
   version = "v0.0.2"
@@ -27,6 +24,17 @@
   packages = ["context"]
   pruneopts = "UT"
   revision = "da137c7871d730100384dbcf36e6f8fa493aef5b"
+
+[[projects]]
+  digest = "1:ea50aa10e6b121c25a0a80fa4cca594e882a606b0dc84cc57c1562e02bff6dfd"
+  name = "golift.io/badgedata"
+  packages = [
+    ".",
+    "grafana",
+  ]
+  pruneopts = "UT"
+  revision = "acbbb17696cde0c13576ec0bde8edca29abaa449"
+  version = "v0.0.2"
 
 [[projects]]
   digest = "1:1adff8807c06ba79cd7464c9aa431fd8b119cc4ac9fd04db5b5c9d472ede2b17"
@@ -57,8 +65,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "code.golift.io/badgedata",
-    "code.golift.io/badgedata/grafana",
+    "golift.io/badgedata",
+    "golift.io/badgedata/grafana",
     "google.golang.org/appengine",
     "gopkg.in/yaml.v2",
   ]

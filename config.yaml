@@ -2,7 +2,7 @@
 
 # This is the host path used for godoc links, etc.
 # Determined automatically if not set here.
-host: code.golift.io
+host: golift.io
 
 # Used as the title of the index page.
 title: Go Lift Code
@@ -16,7 +16,7 @@ links:
 
 # If this is set, a source link to this path is displayed on the index page.
 # protip: setup a redirect for /source - see below.
-src: /source
+src: /turbovanityurls
 
 # This controls the max-age cache-control value.
 # This setting is global, can be set per path too.
@@ -79,6 +79,3 @@ paths:
     redir: https://github.com/davidnewhall/secspy
   /unpacker-poller:
     redir: https://github.com/davidnewhall/unpacker-poller
-  /source:
-    redir_paths: [""]
-    redir: https://github.com/golift/code.golift.io
