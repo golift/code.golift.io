@@ -32,10 +32,7 @@ SOURCE_URL="https://${IMPORT_PATH}"
 # Used for documentation links.
 URL="https://github.com/${GHUSER}/${BINARY}"
 
-# This parameter is passed in as -X to go build. Used to override the Version variable in a package.
-# This makes a path like github.com/user/hello-world/helloworld.Version=1.3.3
-# Name the Version-containing library the same as the github repo, without dashes.
-VERSION_PATH="${IMPORT_PATH}/$(echo ${BINARY} | tr -d -- -).Version"
+VERSION_PATH="main.Version"
 
 # Dynamic. Recommend not changing.
 VVERSION=$(git describe --abbrev=0 --tags $(git rev-list --tags --max-count=1))
@@ -46,6 +43,6 @@ DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 COMMIT="$(git rev-parse --short HEAD || echo 0)"
 
 # Used by homebrew downloads.
-SOURCE_PATH=https://codeload.${IMPORT_PATH}/tar.gz/v${VERSION}
+SOURCE_PATH=https://code.golift.io/${BINARY}/archive/v${VERSION}.tar.gz
 
 export IMPORT_PATH SOURCE_URL URL VERSION_PATH VVERSION VERSION ITERATION DATE COMMIT SOURCE_PATH
