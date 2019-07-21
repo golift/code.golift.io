@@ -44,8 +44,14 @@ type PathConfigs []*PathConfig
 
 // PathConfig is the configuration for a single routing path.
 type PathConfig struct {
-	Path         string   `yaml:"-"`
-	CacheAge     *uint64  `yaml:"cache_max_age,omitempty"`
+	Path     string  `yaml:"-"`
+	CacheAge *uint64 `yaml:"cache_max_age,omitempty"`
+	ImageURL string  `yaml:"image_url,omitempty"`
+	Links    []struct {
+		Title string `yaml:"title,omitempty"`
+		URL   string `yaml:"url,omitempty"`
+	} `yaml:"links,omitempty"`
+	Description  string   `yaml:"description,omitempty"`
 	RedirPaths   []string `yaml:"redir_paths,omitempty"`
 	Repo         string   `yaml:"repo,omitempty"`
 	Redir        string   `yaml:"redir,omitempty"`
@@ -129,32 +135,28 @@ func findRepoVCS(repo string) (string, error) {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	pc := h.PathConfigs.find(r.URL.Path)
-	if pc.PathConfig == nil {
+	switch pc := h.PathConfigs.find(r.URL.Path); {
+	case pc.PathConfig == nil:
+		// Path is not configured.
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 		} else if err := indexTmpl.Execute(w, &h.Config); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
-		return
-	}
-	if pc.RedirectablePath() {
+	case pc.RedirectablePath():
 		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
 		http.Redirect(w, r, redirTo, http.StatusFound)
-		return
-	}
-	if pc.Repo == "" {
+	case pc.Repo == "":
 		// Repo is not set and no paths to redirect, so we're done.
 		http.NotFound(w, r)
-		return
-	}
-
-	// Create a vanity redirect page.
-	w.Header().Set("Cache-Control", pc.cacheControl)
-	pc.Host = h.Hostname(r)
-	if err := vanityTmpl.Execute(w, &pc); err != nil {
-		http.Error(w, "cannot render the page", http.StatusInternalServerError)
+	default:
+		// Create a vanity redirect page.
+		w.Header().Set("Cache-Control", pc.cacheControl)
+		pc.Host = h.Hostname(r)
+		if err := vanityTmpl.Execute(w, &pc); err != nil {
+			http.Error(w, "cannot render the page", http.StatusInternalServerError)
+		}
 	}
 }
 
