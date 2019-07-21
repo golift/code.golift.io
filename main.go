@@ -53,8 +53,25 @@ type Config struct {
 	Src        string                 `yaml:"src,omitempty"`
 }
 
+func parseFlags(args []string) *Flags {
+	flag := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	f := &Flags{listenAddr: ":" + os.Getenv("PORT")}
+	if f.listenAddr == ":" {
+		f.listenAddr = ":8080"
+	}
+	flag.StringVar(&f.listenAddr, "l", f.listenAddr, "HTTP server listen address")
+	flag.StringVar(&f.configPath, "c", "./config.yaml", "config file path")
+	flag.BoolVar(&f.showVer, "v", false, "show version and exit")
+	flag.Usage = func() {
+		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
+		flag.PrintDefaults()
+	}
+	_ = flag.Parse(args)
+	return f
+}
+
 func main() {
-	flags := parseFlags()
+	flags := parseFlags(os.Args[1:])
 	if flags.showVer {
 		fmt.Printf("%v v%v\n", "turbovanityurls", Version)
 		os.Exit(0)
@@ -96,20 +113,4 @@ func parseConfig(configPath string) (*Config, error) {
 		c.BDPath += "/"
 	}
 	return c, nil
-}
-
-func parseFlags() *Flags {
-	f := &Flags{listenAddr: ":" + os.Getenv("PORT")}
-	if f.listenAddr == ":" {
-		f.listenAddr = ":8080"
-	}
-	flag.StringVar(&f.listenAddr, "l", f.listenAddr, "HTTP server listen address")
-	flag.StringVar(&f.configPath, "c", "./config.yaml", "config file path")
-	flag.BoolVar(&f.showVer, "v", false, "show version and exit")
-	flag.Usage = func() {
-		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
-	return f
 }
