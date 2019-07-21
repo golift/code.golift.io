@@ -1,8 +1,8 @@
-# [[ Production Configuration File for golift.io Code Repo ]]
+# TODO: provide more examples of what you can do in this config file.
 
 # This is the host path used for godoc links, etc.
 # Determined automatically if not set here.
-host: golift.io
+host: code.golift.io
 
 # Used as the title of the index page.
 title: Go Lift Code
@@ -16,7 +16,7 @@ links:
 
 # If this is set, a source link to this path is displayed on the index page.
 # protip: setup a redirect for /source - see below.
-src: /turbovanityurls
+src: /source
 
 # This controls the max-age cache-control value.
 # This setting is global, can be set per path too.
@@ -40,11 +40,8 @@ paths:
     redir: https://github.com/golift/unifi
     cache_max_age: 2345
   /deluge:
-    repo: https://code.golift.io/deluge
+    repo: https://github.com/golift/deluge
     redir: https://github.com/golift/deluge
-    vcs: git
-    redir_paths: [""]
-
   /imessage:
     repo: https://github.com/golift/imessage
     redir: https://github.com/golift/imessage
@@ -67,13 +64,6 @@ paths:
     repo: https://github.com/golift/turbovanityurls
     redir: https://github.com/golift/turbovanityurls
 
-  /sspy:
-    tags:
-      v1: v1
-      v2: v2
-      v3: 6209cbf016e87855484aa280b25ffa2cfba3fc3e
-    repo: https://github.com/golift/securityspy
-
   # Unused Examples.
   /david/:
     repo: https://github.com/davidnewhall/
@@ -89,3 +79,6 @@ paths:
     redir: https://github.com/davidnewhall/secspy
   /unpacker-poller:
     redir: https://github.com/davidnewhall/unpacker-poller
+  /source:
+    redir_paths: [""]
+    redir: https://github.com/golift/code.golift.io

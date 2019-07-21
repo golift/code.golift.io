@@ -166,6 +166,17 @@ func TestHandler(t *testing.T) {
 			goSource: "example.com/portmidi.v1 _ https://gitlab.com/rakyll/portmidi/tree/sha_goes_here{/dir} https://gitlab.com/rakyll/portmidi/blob/sha_goes_here{/dir}/{file}#L{line}",
 		},
 		{
+			name: "wildcard dashed repo",
+			config: "host: example.com\n" +
+				"paths:\n" +
+				"  /group/:\n" +
+				"    repo: https://github.com/rakyll/package-group-\n" +
+				"    wildcard: true\n",
+			path:     "/group/foo",
+			goImport: "example.com/group/foo git https://github.com/rakyll/package-group-foo",
+			goSource: "example.com/group/foo https://github.com/rakyll/package-group-foo https://github.com/rakyll/package-group-foo/tree/master{/dir} https://github.com/rakyll/package-group-foo/blob/master{/dir}/{file}#L{line}",
+		},
+		{
 			name: "display Gitlab inference",
 			config: "host: example.com\n" +
 				"paths:\n" +

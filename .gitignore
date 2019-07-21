@@ -1,2 +1,32 @@
+# These are all built by the Makefile.
+# Binaries, Packages, Formula, Manual
+/turbovanityurls
+/turbovanityurls*.gz
+/turbovanityurls*.zip
+/turbovanityurls*.1
+/turbovanityurls*.deb
+/turbovanityurls*.rpm
+/turbovanityurls.*.arm
+/turbovanityurls.exe
+/turbovanityurls.*.macos
+/turbovanityurls.*.linux
+/turbovanityurls.rb
+
+# Random things the Makefile creates.
+*.sha256
+/vendor
+/package_build_*
+/release
+MANUAL
+MANUAL.html
+README
+README.html
+/turbovanityurls_manual.html
+/homebrew_release_repo
+/.metadata.make
+/.secret_files.tar
+/github_deploy_key
+
+# extra junk
+.DS_Store
 *~
-.DS_*

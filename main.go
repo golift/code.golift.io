@@ -21,25 +21,29 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
-	"code.golift.io/badgedata"
-	_ "code.golift.io/badgedata/grafana"
+	"golift.io/badgedata"
+	_ "golift.io/badgedata/grafana"
 )
 
-func main() {
-	listenAddr := ":" + os.Getenv("PORT")
-	if listenAddr == ":" {
-		listenAddr = ":8080"
-	}
-	flag.StringVar(&listenAddr, "listen", listenAddr, "HTTP server listen address")
-	configPath := flag.String("config", "./config.yaml", "config file path")
-	flag.Usage = func() {
-		fmt.Println("Usage: govanityurls [-config <config-file>] [-listen <listen-address>]")
-		flag.PrintDefaults()
-	}
-	flag.Parse()
+// Version is injected at build time.
+var Version = "development"
 
-	vanity, err := ioutil.ReadFile(*configPath)
+// Flags are the CLI flags.
+type Flags struct {
+	listenAddr string
+	configPath string
+	showVer    bool
+}
+
+func main() {
+	flags := parseFlags()
+	if flags.showVer {
+		fmt.Printf("%v v%v\n", "turbovanityurls", Version)
+		os.Exit(0)
+	}
+	vanity, err := ioutil.ReadFile(flags.configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,14 +53,27 @@ func main() {
 	}
 	http.Handle("/bd/", badgedata.Handler())
 	http.Handle("/", vanityHandler)
-	// msg is only used to print a message. Useful to know when the app has
-	// finished starting and provides a clickable link to get right to it.
-	msg := listenAddr
-	if msg[0] == ':' {
-		msg = "127.0.0.1" + msg
+	if strings.HasPrefix(flags.listenAddr, ":") {
+		// A message so you know when it's started; a clickable link for dev'ing.
+		log.Println("Listening at http://127.0.0.1" + flags.listenAddr)
 	}
-	log.Println("Listening at http://" + msg)
-	if err := http.ListenAndServe(listenAddr, nil); err != nil {
+	if err := http.ListenAndServe(flags.listenAddr, nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func parseFlags() *Flags {
+	f := &Flags{listenAddr: ":" + os.Getenv("PORT")}
+	if f.listenAddr == ":" {
+		f.listenAddr = ":8080"
+	}
+	flag.StringVar(&f.listenAddr, "l", f.listenAddr, "HTTP server listen address")
+	flag.StringVar(&f.configPath, "c", "./config.yaml", "config file path")
+	flag.BoolVar(&f.showVer, "v", false, "show version and exit")
+	flag.Usage = func() {
+		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+	return f
 }

@@ -1,0 +1,74 @@
+# Powered by Application Builder: https://github.com/golift/application-builder
+language: go
+git:
+  depth: false
+addons:
+  apt:
+    packages:
+    - ruby-dev
+    - rpm
+    - build-essential
+    - git
+    - libgnome-keyring-dev
+    - fakeroot
+    - zip
+go:
+  - 1.12.x
+services:
+  - docker
+install:
+  - mkdir -p $GOPATH/bin
+  # Download the `dep` binary to bin folder in $GOPATH
+  - curl -sLo $GOPATH/bin/dep https://github.com/golang/dep/releases/download/v0.5.3/dep-linux-amd64
+  - chmod +x $GOPATH/bin/dep
+  # download super-linter: golangci-lint
+  - curl -sL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin latest
+  - rvm install 2.0.0
+  - rvm 2.0.0 do gem install --no-document fpm
+before_script:
+  # Create your own deploy key, tar it, and encrypt the file to make this work. Optionally add a bitly_token file to the archive.
+  - openssl aes-256-cbc -K $encrypted_3d4e59aeeb92_key -iv $encrypted_3d4e59aeeb92_iv -in .secret_files.tar.enc -out .secret_files.tar -d
+  - tar -xf .secret_files.tar
+  - source .metadata.sh
+  - make vendor
+script:
+  # Test Go and Docker.
+  - make test
+  - make docker
+  # Test built docker image.
+  - docker run $BINARY -v 2>&1 | grep -Eq "^$BINARY v$VERSION"
+  # Build everything
+  - rvm 2.0.0 do make release
+after_success:
+  # Display Release Folder
+  - ls -l release/
+  # Setup the ssh client so we can clone and push to the homebrew formula repo.
+  # You must put github_deploy_file into .secret_files.tar.enc
+  # This is an ssh key added to your homebrew forumla repo.
+  - |
+    mkdir -p $HOME/.ssh
+    declare -r SSH_FILE="$(mktemp -u $HOME/.ssh/XXXXX)"
+    echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> $HOME/.ssh/config
+    [ ! -f github_deploy_key ] || (mv github_deploy_key $SSH_FILE \
+      && chmod 600 "$SSH_FILE" \
+      && printf "%s\n" \
+        "Host github.com" \
+        "  IdentityFile $SSH_FILE" \
+        "  StrictHostKeyChecking no" \
+        "  LogLevel ERROR" >> $HOME/.ssh/config)
+deploy:
+  - provider: releases
+    api_key:
+      # to get a secure api key, run: travis setup releases
+      # make a copy of this file first because that command will change it.
+      secure: cJZ2CBTZY5TC/T47BhPCWh3Ws2gDoZXcIGnlPADoe09vhHGh43K9rh9TSPbzTOWRC54cCbLH4kr2ix/qNBL0zmxtl5Vc2fNKBL4LFTfeB7PnsSjwWK6gOQEf1F19R5TF2mEN12MVaBswZSu8z80giOhHngLAvMWlDrPkGMSxSt18GiD5p4ffX+UL3H2MAJkmD/JE8AACK0HpJk+EKziNWr4R/ee7p7MvyCfHw28i4epz4Brp5yDK2VswaIBmAup9hJOxomTqsUTcc5palxnkUMyMpesmMb7jSXj9AU4mm1D/WmwG/oJqH9my2wgzy4O269M6PYudkJ0KIStfgA/CzpvBBmvc+SSfvSdiTru8bHMzxIC4Jnd5mgwCaDah85/2+8a0gw98zkBedHxCx6r79EjI37lxrOOG1xGsbGVGToOhx94KwPrCqegkoQwXgji21r3+vkwo9nil1adcnkFdm8COD0vS4EBdcwt4K7cHN3Qx1l3DmXMBbt+0YZJcprbgIW0CeGzaABv7KePvUBWyvUCZ73j9HwnkBu/d/B3raSmJfgyMz1zjukTIZjl7y2XCElOWKkbqCkxPK7nG9XfpKyHVgOULXHPsz4agqa9uvqeXLXR83Y8b27PRzsEs2jJjWphhPmMouBZ3MMC/wzQL7Cx7zmgXqFPwA8TKSuBkoGM=
+    overwrite: true
+    skip_cleanup: true
+    file_glob: true
+    file: release/*
+    on:
+      tags: true
+  - provider: script
+    script: scripts/formula-deploy.sh
+    on:
+      tags: true
