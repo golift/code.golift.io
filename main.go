@@ -25,6 +25,7 @@ import (
 
 	"golift.io/badgedata"
 	_ "golift.io/badgedata/grafana"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Version is injected at build time.
@@ -37,21 +38,38 @@ type Flags struct {
 	showVer    bool
 }
 
+// Config contains the config file data.
+type Config struct {
+	Title string `yaml:"title,omitempty"`
+	Host  string `yaml:"host,omitempty"`
+	Links []struct {
+		Title string `yaml:"title,omitempty"`
+		URL   string `yaml:"url,omitempty"`
+	} `yaml:"links,omitempty"`
+	CacheAge   *uint64                `yaml:"cache_max_age,omitempty"`
+	BDPath     string                 `yaml:"bd_path,omitempty"`
+	Paths      map[string]*PathConfig `yaml:"paths,omitempty"`
+	RedirPaths []string               `yaml:"redir_paths,omitempty"`
+	Src        string                 `yaml:"src,omitempty"`
+}
+
 func main() {
 	flags := parseFlags()
 	if flags.showVer {
 		fmt.Printf("%v v%v\n", "turbovanityurls", Version)
 		os.Exit(0)
 	}
-	vanity, err := ioutil.ReadFile(flags.configPath)
+	config, err := parseConfig(flags.configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	vanityHandler, err := newHandler(vanity)
+	vanityHandler, err := config.newHandler()
 	if err != nil {
 		log.Fatal(err)
 	}
-	http.Handle("/bd/", badgedata.Handler())
+	if config.BDPath != "" {
+		http.Handle(config.BDPath, badgedata.Handler())
+	}
 	http.Handle("/", vanityHandler)
 	if strings.HasPrefix(flags.listenAddr, ":") {
 		// A message so you know when it's started; a clickable link for dev'ing.
@@ -60,6 +78,24 @@ func main() {
 	if err := http.ListenAndServe(flags.listenAddr, nil); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func parseConfig(configPath string) (*Config, error) {
+	c := &Config{Paths: make(map[string]*PathConfig)}
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(data, c); err != nil {
+		return nil, err
+	}
+	if c.Title == "" {
+		c.Title = c.Host
+	}
+	if c.BDPath != "" && !strings.HasSuffix(c.BDPath, "/") {
+		c.BDPath += "/"
+	}
+	return c, nil
 }
 
 func parseFlags() *Flags {

@@ -46,6 +46,12 @@ CONFIGURATION
     links                       list
       Links are displayed in a list on the index page. Each link has a title and a url.
 
+    bd_path
+      This parameter is used to control badgedata. Badgedata is a custom library
+      that provides "data" for badges. This is a feature used by golift.io, and
+      most people will probably disable this. Set it to "" or remove the line from
+      your config to disable badge data.
+
     redir_paths                 list
       These values are used in a string match to check it a path can be redirected.
       This only works if a path has `redir` set to a non-empty value. If the request

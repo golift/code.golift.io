@@ -21,6 +21,8 @@ import (
 	"net/http/httptest"
 	"sort"
 	"testing"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 func TestHandler(t *testing.T) {
@@ -187,7 +189,7 @@ func TestHandler(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		h, err := newHandler([]byte(test.config))
+		h, err := getTestConfig([]byte(test.config)).newHandler()
 		if err != nil {
 			t.Errorf("%s: newHandler: %v", test.name, err)
 			continue
@@ -227,17 +229,19 @@ func TestBadConfigs(t *testing.T) {
 			"  /unknownvcs:\n" +
 			"    repo: https://unknownbucket.org/zombiezen/gopdf\n" +
 			"    vcs: xyzzy\n",
-		"cache_max_age: -1\n" +
-			"paths:\n" +
-			"  /portmidi:\n" +
-			"    repo: https://github.com/rakyll/portmidi\n",
 	}
 	for _, config := range badConfigs {
-		_, err := newHandler([]byte(config))
+		_, err := getTestConfig([]byte(config)).newHandler()
 		if err == nil {
 			t.Errorf("expected config to produce an error, but did not:\n%s", config)
 		}
 	}
+}
+
+func getTestConfig(data []byte) *Config {
+	c := &Config{}
+	_ = yaml.Unmarshal(data, c)
+	return c
 }
 
 func findMeta(data []byte, name string) string {
@@ -387,8 +391,8 @@ func TestCacheHeader(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		h, err := newHandler([]byte("paths:\n  /portmidi:\n    repo: https://github.com/rakyll/portmidi\n" +
-			test.config))
+		h, err := getTestConfig([]byte("paths:\n  /portmidi:\n    repo: https://github.com/rakyll/portmidi\n" +
+			test.config)).newHandler()
 		if err != nil {
 			t.Errorf("%s: newHandler: %v", test.name, err)
 			continue

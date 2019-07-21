@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"google.golang.org/appengine"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // Handler contains all the running data for our web server.
@@ -38,20 +37,6 @@ var vcsPrefixMap = map[string][]string{
 	"bzr": {"https://bazaar"},
 	"hg":  {"https://hg.", "https://mercurial"},
 	"svn": {"https://svn."},
-}
-
-// Config contains the config file data.
-type Config struct {
-	Title string `yaml:"title,omitempty"`
-	Host  string `yaml:"host,omitempty"`
-	Links []struct {
-		Title string `yaml:"title,omitempty"`
-		URL   string `yaml:"url,omitempty"`
-	} `yaml:"links,omitempty"`
-	CacheAge   *uint64                `yaml:"cache_max_age,omitempty"`
-	Paths      map[string]*PathConfig `yaml:"paths,omitempty"`
-	RedirPaths []string               `yaml:"redir_paths,omitempty"`
-	Src        string                 `yaml:"src,omitempty"`
 }
 
 // PathConfigs contains our list of configured routing-paths.
@@ -79,25 +64,15 @@ type PathReq struct {
 	*PathConfig
 }
 
-func newHandler(configData []byte) (*Handler, error) {
-	h := &Handler{Config: &Config{Paths: make(map[string]*PathConfig)}}
-	if err := yaml.Unmarshal(configData, h.Config); err != nil {
-		return nil, err
-	}
-	if h.Title == "" {
-		h.Title = h.Host
-	}
-	cacheControl := fmt.Sprintf("public, max-age=86400") // 24 hours (in seconds)
-	if h.CacheAge != nil {
-		cacheControl = fmt.Sprintf("public, max-age=%d", *h.CacheAge)
-	}
+func (c *Config) newHandler() (*Handler, error) {
+	h := &Handler{Config: c}
 	for p := range h.Paths {
 		h.Paths[p].Path = p
 		if len(h.Paths[p].RedirPaths) < 1 {
 			// was not provided, pass in global value.
 			h.Paths[p].RedirPaths = h.RedirPaths
 		}
-		h.Paths[p].setRepoCacheControl(cacheControl)
+		h.Paths[p].setRepoCacheControl(h.CacheAge)
 		if err := h.Paths[p].setRepoVCS(); err != nil {
 			return nil, err
 		}
@@ -107,11 +82,14 @@ func newHandler(configData []byte) (*Handler, error) {
 	return h, nil
 }
 
-func (p *PathConfig) setRepoCacheControl(cc string) {
-	p.cacheControl = cc
-	if p.CacheAge != nil {
-		// provided, override global value.
+func (p *PathConfig) setRepoCacheControl(globalCC *uint64) {
+	switch {
+	case p.CacheAge != nil:
 		p.cacheControl = fmt.Sprintf("public, max-age=%d", *p.CacheAge)
+	case globalCC != nil:
+		p.cacheControl = fmt.Sprintf("public, max-age=%d", *globalCC)
+	default:
+		p.cacheControl = fmt.Sprintf("public, max-age=86400") // 24 hours (in seconds)
 	}
 }
 

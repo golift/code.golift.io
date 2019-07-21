@@ -22,6 +22,9 @@ src: /turbovanityurls
 # This setting is global, can be set per path too.
 cache_max_age: 86400
 
+# This is the path used for badgedata. Most people will unset this to turn off badgedata.
+bd_path: "/bd/"
+
 # These paths will be redirected if redir is not ""
 # This setting is global, can be set per path too.
 # Redirection works like this: if the path matches,
