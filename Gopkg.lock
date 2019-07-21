@@ -10,22 +10,6 @@
   version = "v0.0.2"
 
 [[projects]]
-  digest = "1:573ca21d3669500ff845bdebee890eb7fc7f0f50c59f2132f2a0c6b03d85086a"
-  name = "github.com/golang/protobuf"
-  packages = ["proto"]
-  pruneopts = "UT"
-  revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
-  version = "v1.3.2"
-
-[[projects]]
-  branch = "master"
-  digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
-  name = "golang.org/x/net"
-  packages = ["context"]
-  pruneopts = "UT"
-  revision = "da137c7871d730100384dbcf36e6f8fa493aef5b"
-
-[[projects]]
   digest = "1:ea50aa10e6b121c25a0a80fa4cca594e882a606b0dc84cc57c1562e02bff6dfd"
   name = "golift.io/badgedata"
   packages = [
@@ -35,23 +19,6 @@
   pruneopts = "UT"
   revision = "acbbb17696cde0c13576ec0bde8edca29abaa449"
   version = "v0.0.2"
-
-[[projects]]
-  digest = "1:1adff8807c06ba79cd7464c9aa431fd8b119cc4ac9fd04db5b5c9d472ede2b17"
-  name = "google.golang.org/appengine"
-  packages = [
-    ".",
-    "internal",
-    "internal/app_identity",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/modules",
-    "internal/remote_api",
-  ]
-  pruneopts = "UT"
-  revision = "b2f4a3cf3c67576a2ee09e1fe62656a5086ce880"
-  version = "v1.6.1"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -67,7 +34,6 @@
   input-imports = [
     "golift.io/badgedata",
     "golift.io/badgedata/grafana",
-    "google.golang.org/appengine",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"

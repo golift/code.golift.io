@@ -20,8 +20,6 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-
-	"google.golang.org/appengine"
 )
 
 // Handler contains all the running data for our web server.
@@ -165,11 +163,7 @@ func (h *Handler) Hostname(r *http.Request) string {
 	if h.Host != "" {
 		return h.Host
 	}
-	appHost := appengine.DefaultVersionHostname(appengine.NewContext(r))
-	if appHost == "" {
-		return r.Host
-	}
-	return appHost
+	return r.Host
 }
 
 // RedirectablePath checks if a string exists in a list of strings.
