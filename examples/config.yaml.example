@@ -1,11 +1,17 @@
 # TODO: provide more examples of what you can do in this config file.
 
 # This is the host path used for godoc links, etc.
-# Determined automatically if not set here.
+# This is required and must be set.
 host: code.golift.io
 
 # Used as the title in the index page template.
 title: Go Lift Code
+
+# This test is displayed from the index page template.
+description: Go Language Code Libraries - amazing!
+
+# Set this to a URL for a logo image to be displayed on the index and package templates.
+# logo_url: https://some.image.png
 
 # Displayed as links in the index page template.
 links:

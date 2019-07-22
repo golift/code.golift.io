@@ -60,16 +60,22 @@ type PathConfig struct {
 }
 
 // PathReq is returned by find() with a non-nil PathConfig
-// when a request has been matched to a path. Host comes unset.
+// when a request has been matched to a path.
+// Host, LogoURL, and IndexTitle come unset.
 // This struct is passed into the vanity template.
 type PathReq struct {
-	Host    string
-	Subpath string
+	Host       string
+	Subpath    string
+	IndexTitle string
+	LogoURL    string
 	*PathConfig
 }
 
 func (c *Config) newHandler() (*Handler, error) {
 	h := &Handler{Config: c}
+	if c.Host == "" {
+		return nil, fmt.Errorf("must provide host value in config")
+	}
 	for p := range h.Paths {
 		h.Paths[p].Path = p
 		if len(h.Paths[p].RedirPaths) < 1 {
@@ -135,7 +141,7 @@ func findRepoVCS(repo string) (string, error) {
 // NotFound redirects 404 requests if a redirect URL is set.
 func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
 	if h.Redir404 != "" {
-		http.Redirect(w, r, h.RedirIndex, http.StatusFound)
+		http.Redirect(w, r, h.Redir404, http.StatusFound)
 		return
 	}
 	http.NotFound(w, r)
@@ -144,11 +150,15 @@ func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch pc := h.PathConfigs.find(r.URL.Path); {
 	case pc.PathConfig == nil && r.URL.Path != "/":
+		// Unknown URI
 		h.NotFound(w, r)
 	case pc.PathConfig == nil && h.RedirIndex != "":
+		// Index page, but redirect is present.
 		http.Redirect(w, r, h.RedirIndex, http.StatusFound)
 	case pc.PathConfig == nil:
-		if err := indexTmpl.Execute(w, &h.Config); err != nil {
+		// Index page template.
+		templ := indexTmpl.Funcs(funcMap)
+		if err := templ.Execute(w, &h.Config); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
 
@@ -162,24 +172,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		// Create a vanity redirect page.
 		w.Header().Set("Cache-Control", pc.cacheControl)
-		pc.Host = h.Hostname(r)
-		templ := vanityTmpl
+		pc.Host = h.Host
+		pc.IndexTitle = h.Title
+		pc.LogoURL = h.LogoURL
+		templ := vanityTmpl.Funcs(funcMap)
 		if r.URL.Query().Get("go-get") == "1" {
 			// Use a smaller html page if this is a go-get request.
-			templ = gogetTmpl
+			templ = gogetTmpl.Funcs(funcMap)
 		}
 		if err := templ.Execute(w, &pc); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
 	}
-}
-
-// Hostname returns the appropriate Host header for this request.
-func (h *Handler) Hostname(r *http.Request) string {
-	if h.Host != "" {
-		return h.Host
-	}
-	return r.Host
 }
 
 // RedirectablePath checks if a string exists in a list of strings.

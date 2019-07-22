@@ -1,41 +1,68 @@
 package main
 
-import "text/template"
+import (
+	"strings"
+	"text/template"
+)
 
-// This is the index page. TODO: prettify it.
-var indexTmpl = template.Must(template.New("index").Parse(`<!DOCTYPE html>
-<html>
-  <head>
-  <title>{{.Title}}</title>
+var funcMap = map[string]interface{}{
+	"TrimPrefix": func(s, prefix string) string { return strings.TrimPrefix(s, prefix) },
+	// Add more if you need them.
+}
+
+// This is the index page.
+var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{.Title}} - {{.Host}}</title>
   <link rel='icon' href='/favicon.ico' type='image/x-icon'/ >
-    <style>
-    ul {
-      display: flex;
-      flex-wrap: wrap;
-      padding: 0;
-      list-style-type: none;
-    }
-    li { flex: 0 0 33%; }
-    li { text-align: center; }
-    li:nth-child(n) { background-color: #eed; }
-    li:nth-child(6n+4) { background-color: lightgray; }
-    li:nth-child(6n+5) { background-color: lightgray; }
-    li:nth-child(6n+6) { background-color: lightgray; }
-    </style>
-  </head>
-  <body>
-    <h1><a href="https://{{.Host}}/">{{.Title}}</a></h1>
-    {{range .Links -}}
-    <h3><a href="{{.URL}}">{{.Title}}</a></h3>
-    {{end -}}
-    <ul>
-{{- range .Paths}}  {{if and (ne .Repo "") (ne .Wildcard true)}}
-      <li><a href="{{.Path}}">{{.Path}}</a></li>
-      <li><a href="https://godoc.org/{{$.Host}}{{.Path}}">GoDoc</a></li>
-      <li><a href="{{.Repo}}">Code</a></li>
-{{end}}{{- end -}}</ul>
-{{if ne .Src ""}}    (<a href="{{.Src}}">source</a>){{end}}
-  </body>
+  <meta name="author" content="Copyright 2019 - {{.Title}}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+  <!-- these are in static/css -->
+  <link rel="stylesheet" href="https://docs.golift.io/css/normalize.css">
+  <link rel="stylesheet" href="https://docs.golift.io/css/custom.css">
+  <link rel="stylesheet" href="https://docs.golift.io/css/skeleton.css">
+</head>
+<body>
+  <div class="container">
+{{if .LogoURL }}
+    <!-- header image -->
+    <div class="row" style="margin-top: 10%">
+      <img height="200px" src="{{.LogoURL}}">
+    </div>
+{{end}}
+    <!-- header content -->
+    <div class="row" style="margin-top: 5%">
+      <div class="two-thirds column">
+        <h1>{{.Host}} - {{.Title}}</h1>
+        <p>{{.Description}}</p>
+      </div>
+      <div class="one-third column">
+        <h4>Resources</h1>
+{{- range .Links}}
+        <li><a href="{{.URL}}">{{.Title}}</a></li>{{end}}
+      </div>
+    </div>
+
+    <!-- package content -->
+    <div class="value-props row">
+      <div class="two-thirds column value-prop">
+        <h5>Configured Packages</h5>
+        <ul>
+{{- range .Paths}} {{if and .Repo (not .Wildcard)}}
+          <li><a href="{{.Path}}">{{TrimPrefix .Path "/"}}</a></li>{{end}}{{- end}}
+        </ul>
+      </div>
+      <div class="one-third column value-prop">
+        &copy; 2019 {{.Title}}<br>
+{{if .Src}}        (<a href="{{.Src}}">source</a>){{end}}
+      </div>
+    </div>
+
+  </div><!-- container class -->
+</body>
 </html>
 `))
 
@@ -52,18 +79,17 @@ var gogetTmpl = template.Must(template.New("goget").Parse(`<!DOCTYPE html>
 `))
 
 // This is a nicely formatted css-using page for an import path.
-var vanityTmpl = template.Must(template.New("vanity").Parse(`<!DOCTYPE html>
-<!DOCTYPE html>
+var vanityTmpl = template.Must(template.New("vanity").Funcs(funcMap).Parse(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <title>Package {{.Title}} - Go Lift</title>
+  <title>Package {{.Title}} - {{.IndexTitle}}</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon"/>
 
   <meta name="go-import" content="{{.Host}}{{.ImportPath}} {{.VCS}} {{.RepoPath}}"/>
   <meta name="go-source" content="{{.SourcePath}}"/>
   <meta name="description" content="{{.RepoPath}}">
-  <meta name="author" content="Copyright 2019 - Go Lift">
+  <meta name="author" content="Copyright 2019 - {{.IndexTitle}}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
@@ -74,7 +100,7 @@ var vanityTmpl = template.Must(template.New("vanity").Parse(`<!DOCTYPE html>
 </head>
 <body>
   <div class="container">
-{{if ne .ImageURL ""}}
+{{if .ImageURL}}
     <!-- header image -->
     <div class="row" style="margin-top: 10%">
       <img height="150px" src="{{.ImageURL}}">
@@ -113,20 +139,18 @@ var vanityTmpl = template.Must(template.New("vanity").Parse(`<!DOCTYPE html>
     <div class="value-props row">
       <div class="two-thirds column value-prop">
         <p>Download this package.</p>
-        <pre>
-    go get {{.Host}}{{.ImportPath}}
-        </pre>
+        <pre><code>go get {{.Host}}{{.ImportPath}}</code></pre>
         <p>Use this package.</p>
-        <pre>
-    import (
-      "{{.Host}}{{.ImportPath}}"
-    )
-        </pre>
-        <p>Refer to the package as <strong>{{.Title}}</strong></p>
+        <pre><code>import (
+  "{{.Host}}{{.ImportPath}}"
+)</code></pre>
+        <p>Refer to the package as <code>{{.Title}}</code></p>
       </div>
       <div class="one-third column value-prop">
-        <img class="value-img" src="https://docs.golift.io/apple-touch-icon.png">
-        <p>&copy; 2019 Go Lift<p>
+{{- if .LogoURL}}
+        <a href="https://{{.Host}}"><img class="value-img" src="{{.LogoURL}}"></a>
+{{- end}}
+        <p>&copy; 2019 {{.IndexTitle}}<p>
       </div>
     </div>
 

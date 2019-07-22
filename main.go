@@ -40,9 +40,11 @@ type Flags struct {
 
 // Config contains the config file data.
 type Config struct {
-	Title string `yaml:"title,omitempty"`
-	Host  string `yaml:"host,omitempty"`
-	Links []struct {
+	Title       string `yaml:"title,omitempty"`
+	Host        string `yaml:"host,omitempty"`
+	Description string `yaml:"description,omitempty"`
+	LogoURL     string `yaml:"logo_url,omitempty"`
+	Links       []struct {
 		Title string `yaml:"title,omitempty"`
 		URL   string `yaml:"url,omitempty"`
 	} `yaml:"links,omitempty"`

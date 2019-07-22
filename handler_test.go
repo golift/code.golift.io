@@ -222,13 +222,17 @@ func TestHandler(t *testing.T) {
 
 func TestBadConfigs(t *testing.T) {
 	badConfigs := []string{
-		"paths:\n" +
+		"host: example.com\npaths:\n" +
 			"  /missingvcs:\n" +
 			"    repo: https://unknownbucket.org/zombiezen/gopdf\n",
-		"paths:\n" +
+		"host: example.com\npaths:\n" +
 			"  /unknownvcs:\n" +
 			"    repo: https://unknownbucket.org/zombiezen/gopdf\n" +
 			"    vcs: xyzzy\n",
+		"paths:\n" +
+			"  /missinghost:\n" +
+			"    repo: https://github.com/zombiezen/gopdf\n" +
+			"    vcs: git\n",
 	}
 	for _, config := range badConfigs {
 		_, err := getTestConfig([]byte(config)).newHandler()
@@ -391,7 +395,7 @@ func TestCacheHeader(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		h, err := getTestConfig([]byte("paths:\n  /portmidi:\n    repo: https://github.com/rakyll/portmidi\n" +
+		h, err := getTestConfig([]byte("host: example.com\npaths:\n  /portmidi:\n    repo: https://github.com/rakyll/portmidi\n" +
 			test.config)).newHandler()
 		if err != nil {
 			t.Errorf("%s: newHandler: %v", test.name, err)

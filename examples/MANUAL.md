@@ -33,8 +33,15 @@ CONFIGURATION
     title
       Used as the page and html title on the Index page.
 
-    host
-      Used as the import path host. Recommend setting this.
+    host                        required
+      Used as the import path host. This must be set.
+
+    description
+      Displayed as a description paragraph on the index page.
+
+    logo_url
+      If this is set, the logo is displayed in the index and package templates.
+      Set this to a URI or URL for an image that is used in an img src tag.
 
     cache_age                   default: 86400
       Cache-Control header max-age value. This is how long to tell upstream proxy
@@ -58,10 +65,31 @@ CONFIGURATION
       URI contains one of these values it will be redirected. This setting is global
       but it can also be set per path.
 
+    redir_index
+      If set, this parameter is used to redirect index page requests. By default
+      the index page is displayed from a built-in template. If you would rather
+      visitors get forwarded to another page put that URI or URL here.
+
+    redir_404
+      If set, this parameter is used to redirect 404 requests. Set this to a URI
+      or URL to redirect requests to that resulted in a missing page.
+
     paths                       list
       Paths are what make this application work. Add at least one. Each path should
       have either repo or redir set. Or both. Each path has the following optional
       attributes:
+
+      links
+        Each package can have a list of resource links. Each link has a url and
+        a title attribute.
+
+      description
+        If a description is provided, it is displayed on the package page.
+        HTML is OK.
+
+      image_url
+        If parameter is provided, it will be displayed at the top of the
+        package's page. This must be a URI or URL to an image (png, jpg, etc).
 
       cache_age
         See explanation above.

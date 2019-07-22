@@ -1,13 +1,9 @@
 # [[ Production Configuration File for golift.io Code Repo ]]
 
-# This is the host path used for godoc links, etc.
-# Determined automatically if not set here.
 host: golift.io
-
-# Used as the title of the index page.
-title: Go Lift Code
-
-# Displayed as links on the index page.
+title: Go Lift
+logo_url: https://docs.golift.io/apple-touch-icon.png
+description: Go Language Code Libraries - amazing!
 links:
   - title: Docker
     url: https://hub.docker.com/u/golift
@@ -16,7 +12,7 @@ links:
 
 # If this is set, a source link to this path is displayed on the index page.
 # protip: setup a redirect for /source - see below.
-src: /turbovanityurls
+src: /source
 
 # This controls the max-age cache-control value.
 # This setting is global, can be set per path too.
