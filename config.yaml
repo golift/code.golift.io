@@ -38,10 +38,21 @@ paths:
   /badgedata:
     repo: https://github.com/golift/badgedata
     redir: https://github.com/golift/badgedata
+
   /unifi:
     repo: https://github.com/golift/unifi
     redir: https://github.com/golift/unifi
+    image_url: https://docs.golift.io/svg/ubiquiti_color.svg
+    description: Package unifi provides API methods to extract client and device data from a UniFi Controller.
+      Methods are also provided to marshal the data into InfluxDB data points that can be used to create visualizations.
+      This library is used by UniFi Poller to collect and graph network data.
+    links:
+      - url: https://golift.io/unifi-poller
+        title: "UniFi Poller"
+      - url: http://grafana.com/dashboards?search=unifi-poller
+        title: "Grafana Dashboards"
     cache_max_age: 2345
+
   /deluge:
     repo: https://github.com/golift/deluge
     redir: https://github.com/golift/deluge
