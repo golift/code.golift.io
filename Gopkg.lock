@@ -2,23 +2,15 @@
 
 
 [[projects]]
-  digest = "1:f10dee3b90e57609bb157606e970ee65c826ad401dc50cefffe31b2276f34a9f"
-  name = "code.golift.io/badgedata"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "acbbb17696cde0c13576ec0bde8edca29abaa449"
-  version = "v0.0.2"
-
-[[projects]]
-  digest = "1:ea50aa10e6b121c25a0a80fa4cca594e882a606b0dc84cc57c1562e02bff6dfd"
+  digest = "1:ec06c2436972a524f863be1a6dbf9313c4f2d6631abf19f572211b2fec7d3013"
   name = "golift.io/badgedata"
   packages = [
     ".",
     "grafana",
   ]
   pruneopts = "UT"
-  revision = "acbbb17696cde0c13576ec0bde8edca29abaa449"
-  version = "v0.0.2"
+  revision = "8d28afc8b7451c92f408c55c83ba2544bb8b992d"
+  version = "v0.0.3"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
