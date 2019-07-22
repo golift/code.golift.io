@@ -99,9 +99,7 @@ var vanityTmpl = template.Must(template.New("vanity").Parse(`<!DOCTYPE html>
     <div class="value-props row">
       <div class="one-third column value-prop">
         <form action="https://godoc.org/{{.Host}}{{.ImportPath}}" method="get">
-          <input type="button" class="button button-primary" onclick="window.location.href = 'https://godoc.org/{{.Host}}{{.ImportPath}}';" value="Documentation"/>
-
-          </input>
+          <input type="button" class="button button-primary" onClick="window.location.href = 'https://godoc.org/{{.Host}}{{.ImportPath}}';" value="Documentation"/>
         </form>
       </div>
       <div class="one-third column value-prop">
