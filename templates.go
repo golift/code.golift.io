@@ -6,7 +6,7 @@ import (
 )
 
 var funcMap = map[string]interface{}{
-	"TrimPrefix": func(s, prefix string) string { return strings.TrimPrefix(s, prefix) },
+	"TrimPrefix": strings.TrimPrefix,
 	// Add more if you need them.
 }
 
