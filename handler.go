@@ -20,9 +20,6 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-
-	"google.golang.org/appengine"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // Handler contains all the running data for our web server.
@@ -40,27 +37,19 @@ var vcsPrefixMap = map[string][]string{
 	"svn": {"https://svn."},
 }
 
-// Config contains the config file data.
-type Config struct {
-	Title string `yaml:"title,omitempty"`
-	Host  string `yaml:"host,omitempty"`
-	Links []struct {
-		Title string `yaml:"title,omitempty"`
-		URL   string `yaml:"url,omitempty"`
-	} `yaml:"links,omitempty"`
-	CacheAge   *uint64                `yaml:"cache_max_age,omitempty"`
-	Paths      map[string]*PathConfig `yaml:"paths,omitempty"`
-	RedirPaths []string               `yaml:"redir_paths,omitempty"`
-	Src        string                 `yaml:"src,omitempty"`
-}
-
 // PathConfigs contains our list of configured routing-paths.
 type PathConfigs []*PathConfig
 
 // PathConfig is the configuration for a single routing path.
 type PathConfig struct {
-	Path         string   `yaml:"-"`
-	CacheAge     *uint64  `yaml:"cache_max_age,omitempty"`
+	Path     string  `yaml:"-"`
+	CacheAge *uint64 `yaml:"cache_max_age,omitempty"`
+	ImageURL string  `yaml:"image_url,omitempty"`
+	Links    []struct {
+		Title string `yaml:"title,omitempty"`
+		URL   string `yaml:"url,omitempty"`
+	} `yaml:"links,omitempty"`
+	Description  string   `yaml:"description,omitempty"`
 	RedirPaths   []string `yaml:"redir_paths,omitempty"`
 	Repo         string   `yaml:"repo,omitempty"`
 	Redir        string   `yaml:"redir,omitempty"`
@@ -71,25 +60,21 @@ type PathConfig struct {
 }
 
 // PathReq is returned by find() with a non-nil PathConfig
-// when a request has been matched to a path. Host comes unset.
+// when a request has been matched to a path.
+// Host, LogoURL, and IndexTitle come unset.
 // This struct is passed into the vanity template.
 type PathReq struct {
-	Host    string
-	Subpath string
+	Host       string
+	Subpath    string
+	IndexTitle string
+	LogoURL    string
 	*PathConfig
 }
 
-func newHandler(configData []byte) (*Handler, error) {
-	h := &Handler{Config: &Config{Paths: make(map[string]*PathConfig)}}
-	if err := yaml.Unmarshal(configData, h.Config); err != nil {
-		return nil, err
-	}
-	if h.Title == "" {
-		h.Title = h.Host
-	}
-	cacheControl := fmt.Sprintf("public, max-age=86400") // 24 hours (in seconds)
-	if h.CacheAge != nil {
-		cacheControl = fmt.Sprintf("public, max-age=%d", *h.CacheAge)
+func (c *Config) newHandler() (*Handler, error) {
+	h := &Handler{Config: c}
+	if c.Host == "" {
+		return nil, fmt.Errorf("must provide host value in config")
 	}
 	for p := range h.Paths {
 		h.Paths[p].Path = p
@@ -97,7 +82,7 @@ func newHandler(configData []byte) (*Handler, error) {
 			// was not provided, pass in global value.
 			h.Paths[p].RedirPaths = h.RedirPaths
 		}
-		h.Paths[p].setRepoCacheControl(cacheControl)
+		h.Paths[p].setRepoCacheControl(h.CacheAge)
 		if err := h.Paths[p].setRepoVCS(); err != nil {
 			return nil, err
 		}
@@ -107,11 +92,14 @@ func newHandler(configData []byte) (*Handler, error) {
 	return h, nil
 }
 
-func (p *PathConfig) setRepoCacheControl(cc string) {
-	p.cacheControl = cc
-	if p.CacheAge != nil {
-		// provided, override global value.
+func (p *PathConfig) setRepoCacheControl(globalCC *uint64) {
+	switch {
+	case p.CacheAge != nil:
 		p.cacheControl = fmt.Sprintf("public, max-age=%d", *p.CacheAge)
+	case globalCC != nil:
+		p.cacheControl = fmt.Sprintf("public, max-age=%d", *globalCC)
+	default:
+		p.cacheControl = fmt.Sprintf("public, max-age=86400") // 24 hours (in seconds)
 	}
 }
 
@@ -150,46 +138,52 @@ func findRepoVCS(repo string) (string, error) {
 	return "", fmt.Errorf("cannot infer VCS from %s", repo)
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	pc := h.PathConfigs.find(r.URL.Path)
-	if pc.PathConfig == nil {
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-		} else if err := indexTmpl.Execute(w, &h.Config); err != nil {
-			http.Error(w, "cannot render the page", http.StatusInternalServerError)
-		}
+// NotFound redirects 404 requests if a redirect URL is set.
+func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
+	if h.Redir404 != "" {
+		http.Redirect(w, r, h.Redir404, http.StatusFound)
 		return
 	}
-	if pc.RedirectablePath() {
+	http.NotFound(w, r)
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	switch pc := h.PathConfigs.find(r.URL.Path); {
+	case pc.PathConfig == nil && r.URL.Path != "/":
+		// Unknown URI
+		h.NotFound(w, r)
+	case pc.PathConfig == nil && h.RedirIndex != "":
+		// Index page, but redirect is present.
+		http.Redirect(w, r, h.RedirIndex, http.StatusFound)
+	case pc.PathConfig == nil:
+		// Index page template.
+		templ := indexTmpl.Funcs(funcMap)
+		if err := templ.Execute(w, &h.Config); err != nil {
+			http.Error(w, "cannot render the page", http.StatusInternalServerError)
+		}
+
+	case pc.RedirectablePath():
 		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
 		http.Redirect(w, r, redirTo, http.StatusFound)
-		return
-	}
-	if pc.Repo == "" {
+	case pc.Repo == "":
 		// Repo is not set and no paths to redirect, so we're done.
-		http.NotFound(w, r)
-		return
+		h.NotFound(w, r)
+	default:
+		// Create a vanity redirect page.
+		w.Header().Set("Cache-Control", pc.cacheControl)
+		pc.Host = h.Host
+		pc.IndexTitle = h.Title
+		pc.LogoURL = h.LogoURL
+		templ := vanityTmpl.Funcs(funcMap)
+		if r.URL.Query().Get("go-get") == "1" {
+			// Use a smaller html page if this is a go-get request.
+			templ = gogetTmpl.Funcs(funcMap)
+		}
+		if err := templ.Execute(w, &pc); err != nil {
+			http.Error(w, "cannot render the page", http.StatusInternalServerError)
+		}
 	}
-
-	// Create a vanity redirect page.
-	w.Header().Set("Cache-Control", pc.cacheControl)
-	pc.Host = h.Hostname(r)
-	if err := vanityTmpl.Execute(w, &pc); err != nil {
-		http.Error(w, "cannot render the page", http.StatusInternalServerError)
-	}
-}
-
-// Hostname returns the appropriate Host header for this request.
-func (h *Handler) Hostname(r *http.Request) string {
-	if h.Host != "" {
-		return h.Host
-	}
-	appHost := appengine.DefaultVersionHostname(appengine.NewContext(r))
-	if appHost == "" {
-		return r.Host
-	}
-	return appHost
 }
 
 // RedirectablePath checks if a string exists in a list of strings.
@@ -210,42 +204,40 @@ func (p *PathReq) RedirectablePath() bool {
 // ImportPath is used in the template to generate the import path.
 func (p *PathReq) ImportPath() string {
 	path := p.Path
+	if p.Wildcard {
+		path += strings.Split(p.Subpath, "/")[0]
+	}
+	return strings.TrimSuffix(path, "/")
+}
+
+// RepoPath is used in the template to generate the repo path.
+func (p *PathReq) RepoPath() string {
 	repo := p.Repo
 	if p.Wildcard {
-		sub := strings.Split(p.Subpath, "/")[0]
-		path += sub
-		repo += sub
+		repo += strings.Split(p.Subpath, "/")[0]
 	}
-	return p.Host + strings.TrimSuffix(path, "/") + " " + p.VCS + " " + repo
+	return repo
+}
+
+// Title is used in the template to generate the package title (name).
+func (p *PathReq) Title() string {
+	s := strings.Split(p.ImportPath(), "/")
+	return s[len(s)-1]
 }
 
 // SourcePath is used in the template to generate the source path.
 func (p *PathReq) SourcePath() string {
 	if p.Display != "" {
-		return p.Host + strings.TrimSuffix(p.Path, "/") + " " + p.Display
+		return p.Host + p.ImportPath() + " " + p.Display
 	}
-	// TODO: add branch control.
 	template := "%v%v %v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}"
 	if strings.HasPrefix(p.Repo, "https://bitbucket.org") {
 		template = "%v%v %v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}"
 	}
-	path := p.Path
-	repo := p.Repo
-	if p.Wildcard {
-		sub := strings.Split(p.Subpath, "/")[0]
-		path += sub
-		repo += sub
-	}
+	path := p.ImportPath()
+	repo := p.RepoPath()
 	// github, gitlab, git, svn, hg, bzr - may need more tweaking for some of these.
-	return fmt.Sprintf(template, p.Host, strings.TrimSuffix(path, "/"), repo, repo, repo)
-}
-
-// GoDocPath is used in the template to generate the GoDoc path.
-func (p *PathReq) GoDocPath() string {
-	if p.Wildcard {
-		return p.Host + "/" + p.Subpath
-	}
-	return p.Host + p.Path + "/" + p.Subpath
+	return fmt.Sprintf(template, p.Host, path, repo, repo, repo)
 }
 
 // Len is a sort.Sort interface method.
