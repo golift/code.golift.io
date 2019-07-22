@@ -65,18 +65,12 @@ paths:
   /ffmpeg:
     repo: https://github.com/golift/ffmpeg
     redir: https://github.com/golift/ffmpeg
-  /application-builder:
-    repo: https://github.com/golift/application-builder
-    redir: https://github.com/golift/application-builder
   /starr:
     repo: https://github.com/golift/starr
     redir: https://github.com/golift/starr
   /securityspy:
     repo: https://github.com/golift/securityspy
     redir: https://github.com/golift/securityspy
-  /turbovanityurls:
-    repo: https://github.com/golift/turbovanityurls
-    redir: https://github.com/golift/turbovanityurls
 
   # Unused Examples.
   /david/:
@@ -93,3 +87,6 @@ paths:
     redir: https://github.com/davidnewhall/secspy
   /unpacker-poller:
     redir: https://github.com/davidnewhall/unpacker-poller
+  /source:
+    redir_paths: [""]
+    redir: https://github.com/golift/turbovanityurls

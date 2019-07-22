@@ -132,22 +132,33 @@ func findRepoVCS(repo string) (string, error) {
 	return "", fmt.Errorf("cannot infer VCS from %s", repo)
 }
 
+// NotFound redirects 404 requests if a redirect URL is set.
+func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
+	if h.Redir404 != "" {
+		http.Redirect(w, r, h.RedirIndex, http.StatusFound)
+		return
+	}
+	http.NotFound(w, r)
+}
+
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch pc := h.PathConfigs.find(r.URL.Path); {
+	case pc.PathConfig == nil && r.URL.Path != "/":
+		h.NotFound(w, r)
+	case pc.PathConfig == nil && h.RedirIndex != "":
+		http.Redirect(w, r, h.RedirIndex, http.StatusFound)
 	case pc.PathConfig == nil:
-		// Path is not configured.
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-		} else if err := indexTmpl.Execute(w, &h.Config); err != nil {
+		if err := indexTmpl.Execute(w, &h.Config); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
+
 	case pc.RedirectablePath():
 		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
 		http.Redirect(w, r, redirTo, http.StatusFound)
 	case pc.Repo == "":
 		// Repo is not set and no paths to redirect, so we're done.
-		http.NotFound(w, r)
+		h.NotFound(w, r)
 	default:
 		// Create a vanity redirect page.
 		w.Header().Set("Cache-Control", pc.cacheControl)

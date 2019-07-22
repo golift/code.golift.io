@@ -51,6 +51,8 @@ type Config struct {
 	Paths      map[string]*PathConfig `yaml:"paths,omitempty"`
 	RedirPaths []string               `yaml:"redir_paths,omitempty"`
 	Src        string                 `yaml:"src,omitempty"`
+	RedirIndex string                 `yaml:"redir_index,omitempty"`
+	Redir404   string                 `yaml:"redir_404,omitempty"`
 }
 
 func parseFlags(args []string) *Flags {

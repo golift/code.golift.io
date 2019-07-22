@@ -57,14 +57,14 @@ func TestParseConfig(t *testing.T) {
 		if err != nil {
 			t.Errorf("writing test temporary file failed\n%s", err)
 		}
+		_ = f.Close()
+
 		defer func() {
-			err := syscall.Unlink(f.Name())
-			if err != nil {
+			if err := syscall.Unlink(f.Name()); err != nil {
 				t.Errorf("error deleting test file\n%v\n%s", err, f.Name())
 			}
 		}()
 		_ = ioutil.WriteFile(f.Name(), []byte(test.config), 0644)
-		f.Close()
 		c, err := parseConfig(f.Name())
 		if err != nil {
 			t.Errorf("test config produced unexpected error\n%v\n%s", err, test.config)
