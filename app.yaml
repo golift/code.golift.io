@@ -4,8 +4,14 @@ handlers:
 - url: /(.*\.(gif|png|jpg|svg|ico|txt|js|css))$
   static_files: static/\1
   upload: static/.*\.(gif|png|jpg|svg|ico|txt|js|css)$
+  secure: always
+  redirect_http_response_code: 301
 - url: /(browserconfig.xml|site.webmanifest)$
   static_files: static/\1
   upload: static/.*\.(xml|webmanifest)$
+  secure: always
+  redirect_http_response_code: 301
 - url: /.*
   script: auto
+  secure: always
+  redirect_http_response_code: 301
