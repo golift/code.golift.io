@@ -22,7 +22,7 @@ func TestParseFlags(t *testing.T) {
 	if flags.listenAddr != ":8080" {
 		t.Errorf("default flag value not correct: %v", flags.listenAddr)
 	}
-	if flags.configPath != "./config.yaml" {
+	if flags.configPath != DefaultConfFile {
 		t.Errorf("default flag value not correct: %v", flags.configPath)
 	}
 }

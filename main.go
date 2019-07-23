@@ -64,7 +64,7 @@ func parseFlags(args []string) *Flags {
 		f.listenAddr = ":8080"
 	}
 	flag.StringVar(&f.listenAddr, "l", f.listenAddr, "HTTP server listen address")
-	flag.StringVar(&f.configPath, "c", "./config.yaml", "config file path")
+	flag.StringVar(&f.configPath, "c", DefaultConfFile, "config file path")
 	flag.BoolVar(&f.showVer, "v", false, "show version and exit")
 	flag.Usage = func() {
 		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
@@ -103,6 +103,10 @@ func main() {
 
 func parseConfig(configPath string) (*Config, error) {
 	c := &Config{Paths: make(map[string]*PathConfig)}
+	if _, err := os.Stat(configPath); os.IsNotExist(err) && configPath == DefaultConfFile {
+		log.Printf("Default Config File Not Found: %s - trying ./config.yaml", configPath)
+		configPath = "config.yaml"
+	}
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return nil, err

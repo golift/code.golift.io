@@ -83,6 +83,8 @@ paths:
     redir: https://github.com/davidnewhall/secspy
   /unpacker-poller:
     redir: https://github.com/davidnewhall/unpacker-poller
+  /turbovanityurls:
+    redir: https://github.com/golift/turbovanityurls
   /source:
     redir_paths: [""]
     redir: https://github.com/golift/turbovanityurls
