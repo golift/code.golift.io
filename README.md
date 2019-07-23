@@ -42,18 +42,21 @@ brew install golift/mugs/turbovanityurls
 -   Converted `PathConfig` to a pointer; can be accessed as a map or a slice now.
 -   Embedded structs for better inheritance model.
 -   Set `max_age` per path instead of global-only.
--   Added `-listen` and `-config` flags. [#20](https://github.com/GoogleCloudPlatform/govanityurls/pull/20)
+-   Added `-l` (listen) and `-c` (config) flags. [#20](https://github.com/GoogleCloudPlatform/govanityurls/pull/20)
 -   Root path repos work now. [#23](https://github.com/GoogleCloudPlatform/govanityurls/pull/23)
 -   Better auto-detection for repo type. [#26](https://github.com/GoogleCloudPlatform/govanityurls/pull/26) and [#27](https://github.com/GoogleCloudPlatform/govanityurls/pull/27)
 
 #### New Features
+-   See the [new manual](examples/MANUAL.md), and the [example config file](examples/config.yaml.example).
 -   Path redirects. Issue 302s for specific paths.
     -   Useful for redirecting to download links on GitHub.
--   More customization for index page.
+-   More customization for index and package pages.
+-   Configurable descriptions and logos.
+-   Better CSS/HTML templates.
 
 #### Other
 Incorporated a badge package for data collection and return.
 In other words this app can collect data from "things"
 (like the public grafana api) and store that data for later requests.
 I use this to populate badge/shield data for things like "grafana
-dashboard download counter" - [https://github.com/golift/badgedata](https://github.com/golift/badgedata). It's [3 lines of code](https://github.com/golift/turbovanityurls/commit/89451a0a783b9c1991313c0a5cc6e70e9c023e14#diff-7ddfb3e035b42cd70649cc33393fe32c) you can pull out real easy.
+dashboard download counter" - [https://github.com/golift/badgedata](https://github.com/golift/badgedata). It's [3 lines of code](https://github.com/golift/turbovanityurls/commit/89451a0a783b9c1991313c0a5cc6e70e9c023e14#diff-7ddfb3e035b42cd70649cc33393fe32c) you can pull out real easy. You can also disable badgedata in the config file.
