@@ -67,6 +67,9 @@ paths:
   /securityspy:
     repo: https://github.com/golift/securityspy
     redir: https://github.com/golift/securityspy
+  /rar:
+    repo: https://github.com/golift/rar
+    redir: https://github.com/golift/rar
 
   # Unused Examples.
   /david/:
