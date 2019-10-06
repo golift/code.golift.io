@@ -5,7 +5,7 @@ SYNOPSIS
 ---
 `turbovanityurls -c /etc/turbovanityurls/config.yaml`
 
-This daemon prints hello world.
+This daemon provides a web server that creates go "vanity" import paths.
 
 OPTIONS
 ---
