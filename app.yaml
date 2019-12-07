@@ -6,9 +6,9 @@ handlers:
   upload: static/.*\.(gif|png|jpg|svg|ico|txt|js|css)$
   secure: always
   redirect_http_response_code: 301
-- url: /(browserconfig.xml|site.webmanifest)$
+- url: /(browserconfig.xml|site.webmanifest|gpgkey)$
   static_files: static/\1
-  upload: static/.*\.(xml|webmanifest)$
+  upload: static/(gpgkey|.*\.(xml|webmanifest))$
   secure: always
   redirect_http_response_code: 301
 - url: /.*

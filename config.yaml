@@ -82,12 +82,16 @@ paths:
   # No repos.
   /unifi-poller:
     redir: https://github.com/davidnewhall/unifi-poller
+    redir_paths: [""]
   /secspy:
     redir: https://github.com/davidnewhall/secspy
+    redir_paths: [""]
   /unpacker-poller:
     redir: https://github.com/davidnewhall/unpacker-poller
+    redir_paths: [""]
   /turbovanityurls:
     redir: https://github.com/golift/turbovanityurls
+    redir_paths: [""]
   /source:
     redir_paths: [""]
     redir: https://github.com/golift/turbovanityurls

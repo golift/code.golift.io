@@ -112,7 +112,7 @@ CONFIGURATION
         Set this if you get an error that it cannot be determined automatically.
 
       wildcard
-        Allows redirecting all sub paths as repo paths. Set to true to enable the feature.
+        Allows redirecting all sub paths as repo paths. Set true to enable the feature.
 
 AUTHOR
 ---
@@ -121,4 +121,4 @@ AUTHOR
 
 LOCATION
 ---
-*   Turbo Vanity URLs: [https://github.com/golift/turbovanityurls](https://github.com/golift/turbovanityurls)
+*   Turbo Vanity URLs: [https://golift.io/turbovanityurls](https://golift.io/turbovanityurls)
