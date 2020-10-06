@@ -13,7 +13,7 @@ addons:
     - fakeroot
     - zip
 go:
-  - 1.12.x
+  - 1.15.x
 services:
   - docker
 install:

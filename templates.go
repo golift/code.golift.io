@@ -16,7 +16,7 @@ var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(`<!DOCT
 <head>
   <title>{{.Title}} - {{.Host}}</title>
   <link rel='icon' href='/favicon.ico' type='image/x-icon'/ >
-  <meta name="author" content="Copyright 2019 - {{.Title}}">
+  <meta name="author" content="Copyright 2019-2021 - {{.Title}}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
@@ -56,7 +56,7 @@ var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(`<!DOCT
         </ul>
       </div>
       <div class="one-third column value-prop">
-        &copy; 2019 {{.Title}}<br>
+        &copy; 2019-2021 {{.Title}}<br>
 {{if .Src}}        (<a href="{{.Src}}">source</a>){{end}}
       </div>
     </div>
@@ -89,7 +89,7 @@ var vanityTmpl = template.Must(template.New("vanity").Funcs(funcMap).Parse(`<!DO
   <meta name="go-import" content="{{.Host}}{{.ImportPath}} {{.VCS}} {{.RepoPath}}"/>
   <meta name="go-source" content="{{.SourcePath}}"/>
   <meta name="description" content="{{.RepoPath}}">
-  <meta name="author" content="Copyright 2019 - {{.IndexTitle}}">
+  <meta name="author" content="Copyright 2019-2021 - {{.IndexTitle}}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
@@ -150,7 +150,7 @@ var vanityTmpl = template.Must(template.New("vanity").Funcs(funcMap).Parse(`<!DO
 {{- if .LogoURL}}
         <a href="https://{{.Host}}"><img class="value-img" src="{{.LogoURL}}"></a>
 {{- end}}
-        <p>&copy; 2019 {{.IndexTitle}}<p>
+        <p>&copy; 2019-2021 {{.IndexTitle}}<p>
       </div>
     </div>
 

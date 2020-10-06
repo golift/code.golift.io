@@ -25,7 +25,7 @@ import (
 
 	"golift.io/badgedata"
 	_ "golift.io/badgedata/grafana"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // Version is injected at build time.
@@ -60,17 +60,22 @@ type Config struct {
 func parseFlags(args []string) *Flags {
 	flag := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	f := &Flags{listenAddr: ":" + os.Getenv("PORT")}
+
 	if f.listenAddr == ":" {
 		f.listenAddr = ":8080"
 	}
+
 	flag.StringVar(&f.listenAddr, "l", f.listenAddr, "HTTP server listen address")
 	flag.StringVar(&f.configPath, "c", DefaultConfFile, "config file path")
 	flag.BoolVar(&f.showVer, "v", false, "show version and exit")
+
 	flag.Usage = func() {
 		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
 		flag.PrintDefaults()
 	}
+
 	_ = flag.Parse(args)
+
 	return f
 }
 
@@ -80,22 +85,28 @@ func main() {
 		fmt.Printf("%v v%v\n", "turbovanityurls", Version)
 		os.Exit(0)
 	}
+
 	config, err := parseConfig(flags.configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	vanityHandler, err := config.newHandler()
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	if config.BDPath != "" {
 		http.Handle(config.BDPath, badgedata.Handler())
 	}
+
 	http.Handle("/", vanityHandler)
+
 	if strings.HasPrefix(flags.listenAddr, ":") {
 		// A message so you know when it's started; a clickable link for dev'ing.
 		log.Println("Listening at http://127.0.0.1" + flags.listenAddr)
 	}
+
 	if err := http.ListenAndServe(flags.listenAddr, nil); err != nil {
 		log.Fatal(err)
 	}
@@ -103,22 +114,28 @@ func main() {
 
 func parseConfig(configPath string) (*Config, error) {
 	c := &Config{Paths: make(map[string]*PathConfig)}
+
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && configPath == DefaultConfFile {
 		log.Printf("Default Config File Not Found: %s - trying ./config.yaml", configPath)
 		configPath = "config.yaml"
 	}
+
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}
+
 	if err := yaml.Unmarshal(data, c); err != nil {
 		return nil, err
 	}
+
 	if c.Title == "" {
 		c.Title = c.Host
 	}
+
 	if c.BDPath != "" && !strings.HasSuffix(c.BDPath, "/") {
 		c.BDPath += "/"
 	}
+
 	return c, nil
 }

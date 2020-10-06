@@ -70,8 +70,11 @@ paths:
     repo: https://github.com/golift/securityspy
     redir: https://github.com/golift/securityspy
   /rar:
-    repo: https://github.com/golift/rar
-    redir: https://github.com/golift/rar
+    repo: https://github.com/jkotra/gorar
+    redir: https://github.com/jkotra/gorar
+  /xtractr:
+    repo: https://github.com/golift/xtractr
+    redir: https://github.com/golift/xtractr
 
   # Unused Examples.
   /david/:
@@ -88,8 +91,11 @@ paths:
   /secspy:
     redir: https://github.com/davidnewhall/secspy
     redir_paths: [""]
-  /unpacker-poller:
-    redir: https://github.com/davidnewhall/unpacker-poller
+  /unpackerr:
+    redir: https://github.com/davidnewhall/unpackerr
+    redir_paths: [""]
+  /motifini:
+    redir: https://github.com/davidnewhall/motifini
     redir_paths: [""]
   /turbovanityurls:
     redir: https://github.com/golift/turbovanityurls

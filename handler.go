@@ -73,22 +73,30 @@ type PathReq struct {
 
 func (c *Config) newHandler() (*Handler, error) {
 	h := &Handler{Config: c}
+
 	if c.Host == "" {
 		return nil, fmt.Errorf("must provide host value in config")
 	}
+
 	for p := range h.Paths {
 		h.Paths[p].Path = p
+
 		if len(h.Paths[p].RedirPaths) < 1 {
 			// was not provided, pass in global value.
 			h.Paths[p].RedirPaths = h.RedirPaths
 		}
+
 		h.Paths[p].setRepoCacheControl(h.CacheAge)
+
 		if err := h.Paths[p].setRepoVCS(); err != nil {
 			return nil, err
 		}
+
 		h.PathConfigs = append(h.PathConfigs, h.Paths[p])
 	}
+
 	sort.Sort(h.PathConfigs)
+
 	return h, nil
 }
 
@@ -105,7 +113,7 @@ func (p *PathConfig) setRepoCacheControl(globalCC *uint64) {
 
 // setRepoVCS makes sure the provides VCS type is supported,
 // or sets it automatically based on the repo's prefix.
-func (p *PathConfig) setRepoVCS() error {
+func (p *PathConfig) setRepoVCS() (err error) {
 	// Check and set VCS type.
 	switch {
 	case p.Repo == "" && p.Redir != "":
@@ -114,8 +122,8 @@ func (p *PathConfig) setRepoVCS() error {
 		p.VCS = "git"
 	case p.VCS == "":
 		// Try to figure it out.
-		var err error
 		p.VCS, err = findRepoVCS(p.Repo)
+
 		return err
 	default:
 		// Already filled in, make sure it's supported.
@@ -123,6 +131,7 @@ func (p *PathConfig) setRepoVCS() error {
 			return fmt.Errorf("configuration for %v: unknown VCS %s", p, p.VCS)
 		}
 	}
+
 	return nil
 }
 
@@ -135,6 +144,7 @@ func findRepoVCS(repo string) (string, error) {
 			}
 		}
 	}
+
 	return "", fmt.Errorf("cannot infer VCS from %s", repo)
 }
 
@@ -142,8 +152,10 @@ func findRepoVCS(repo string) (string, error) {
 func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
 	if h.Redir404 != "" {
 		http.Redirect(w, r, h.Redir404, http.StatusFound)
+
 		return
 	}
+
 	http.NotFound(w, r)
 }
 
@@ -161,7 +173,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := templ.Execute(w, &h.Config); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
-
 	case pc.RedirectablePath():
 		// Redirect for file downloads.
 		redirTo := pc.Redir + strings.TrimPrefix(r.URL.Path, pc.Path)
@@ -176,10 +187,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		pc.IndexTitle = h.Title
 		pc.LogoURL = h.LogoURL
 		templ := vanityTmpl.Funcs(funcMap)
+
 		if r.URL.Query().Get("go-get") == "1" {
 			// Use a smaller html page if this is a go-get request.
 			templ = gogetTmpl.Funcs(funcMap)
 		}
+
 		if err := templ.Execute(w, &pc); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
@@ -193,35 +206,42 @@ func (p *PathReq) RedirectablePath() bool {
 	if p.Redir == "" {
 		return false
 	}
+
 	for _, s := range p.RedirPaths {
 		if strings.Contains(p.Subpath, s) {
 			return true
 		}
 	}
+
 	return false
 }
 
 // ImportPath is used in the template to generate the import path.
 func (p *PathReq) ImportPath() string {
 	path := p.Path
+
 	if p.Wildcard {
 		path += strings.Split(p.Subpath, "/")[0]
 	}
+
 	return strings.TrimSuffix(path, "/")
 }
 
 // RepoPath is used in the template to generate the repo path.
 func (p *PathReq) RepoPath() string {
 	repo := p.Repo
+
 	if p.Wildcard {
 		repo += strings.Split(p.Subpath, "/")[0]
 	}
+
 	return repo
 }
 
 // Title is used in the template to generate the package title (name).
 func (p *PathReq) Title() string {
 	s := strings.Split(p.ImportPath(), "/")
+
 	return s[len(s)-1]
 }
 
@@ -230,12 +250,16 @@ func (p *PathReq) SourcePath() string {
 	if p.Display != "" {
 		return p.Host + p.ImportPath() + " " + p.Display
 	}
+
 	template := "%v%v %v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}"
+
 	if strings.HasPrefix(p.Repo, "https://bitbucket.org") {
 		template = "%v%v %v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}"
 	}
+
 	path := p.ImportPath()
 	repo := p.RepoPath()
+
 	// github, gitlab, git, svn, hg, bzr - may need more tweaking for some of these.
 	return fmt.Sprintf(template, p.Host, path, repo, repo, repo)
 }
@@ -261,10 +285,12 @@ func (pset PathConfigs) find(path string) PathReq {
 	i := sort.Search(len(pset), func(i int) bool {
 		return pset[i].Path >= path
 	})
+
 	if i < len(pset) && pset[i].Path == path {
 		// We have an exact match to a configured path.
 		return PathReq{PathConfig: pset[i]}
 	}
+
 	// This attempts to match /some/path/here but not /some/pathhere
 	if i > 0 && strings.HasPrefix(path, pset[i-1].Path+"/") {
 		// We have a partial match with a subpath!
@@ -290,6 +316,7 @@ func (pset PathConfigs) find(path string) PathReq {
 			// configured path with equal or greater length is NOT a match.
 			continue
 		}
+
 		sSubpath := strings.TrimPrefix(path, pset[i].Path)
 		if len(sSubpath) < lenShortestSubpath {
 			// We get into this if statement only if TrimPrefix trimmed something.
@@ -300,5 +327,6 @@ func (pset PathConfigs) find(path string) PathReq {
 			p.PathConfig = pset[i]
 		}
 	}
+
 	return p
 }
