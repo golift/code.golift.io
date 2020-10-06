@@ -75,6 +75,10 @@ paths:
   /xtractr:
     repo: https://github.com/golift/xtractr
     redir: https://github.com/golift/xtractr
+  /turbovanityurls:
+    repo: https://github.com/golift/turbovanityurls
+    redir: https://github.com/golift/turbovanityurls
+    redir_paths: [""]
 
   # Unused Examples.
   /david/:
@@ -96,9 +100,6 @@ paths:
     redir_paths: [""]
   /motifini:
     redir: https://github.com/davidnewhall/motifini
-    redir_paths: [""]
-  /turbovanityurls:
-    redir: https://github.com/golift/turbovanityurls
     redir_paths: [""]
   /source:
     redir_paths: [""]
