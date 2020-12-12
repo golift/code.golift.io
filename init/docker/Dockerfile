@@ -18,15 +18,11 @@ ARG BINARY
 ARG IMPORT_PATH
 
 RUN mkdir -p $GOPATH/pkg/mod $GOPATH/bin $GOPATH/src/${IMPORT_PATH}
-RUN apt-get update \
-  && apt-get install -y curl  \
-  && curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
 COPY . $GOPATH/src/${IMPORT_PATH}
 WORKDIR $GOPATH/src/${IMPORT_PATH}
 
-RUN dep ensure --vendor-only \
-  && CGO_ENABLED=0 make ${BINARY}.${ARCH}.${OS}
+RUN CGO_ENABLED=0 make ${BINARY}.${ARCH}.${OS}
 
 FROM scratch
 ARG ARCH
