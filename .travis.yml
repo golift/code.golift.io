@@ -12,12 +12,15 @@ addons:
     - libgnome-keyring-dev
     - fakeroot
     - zip
+    - debsigs
+#    - gnupg
+    - expect
 go:
   - 1.15.x
 services:
   - docker
 install:
-  - mkdir -p $GOPATH/bin
+  - mkdir -p $(go env GOPATH)/bin
   - curl -sL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin latest
   - rvm install 2.3.0
   - rvm 2.3.0 do gem install --no-document fpm
@@ -25,6 +28,8 @@ before_script:
   # Create your own deploy key, tar it, and encrypt the file to make this work. Optionally add a bitly_token file to the archive.
   - openssl aes-256-cbc -K $encrypted_3d4e59aeeb92_key -iv $encrypted_3d4e59aeeb92_iv -in .secret_files.tar.enc -out .secret_files.tar -d
   - tar -xf .secret_files.tar
+#  - gpg --import gpg.signing.key
+  - rm -f gpg.signing.key .secret_files.tar
   - source .metadata.sh
 script:
   # Test Go and Docker.

@@ -9,6 +9,9 @@ links:
     url: https://hub.docker.com/u/golift
   - title: GitHub
     url: https://github.com/golift
+  - title: Discord
+    url: https://golift.io/discord
+
 
 # If this is set, a source link to this path is displayed on the index page.
 # protip: setup a redirect for /source - see below.
@@ -44,8 +47,10 @@ paths:
     links:
       - url: https://github.com/unifi-poller/unifi-poller
         title: "UniFi Poller"
-      - url: http://grafana.com/dashboards?search=unifi-poller
+      - url: https://grafana.com/dashboards?search=unifi-poller
         title: "Grafana Dashboards"
+      - url: https://discord.gg/KnyKYt2
+        title: "Ubiquiti Discord"
     cache_max_age: 2345
 
   /cnfg:

@@ -6,7 +6,7 @@ This is the source that runs [https://golift.io](https://golift.io).
 #### Automatic Builds
 
 This can be run anywhere, really. Packages and builds for lots of things are provided.
-The repo auto-builds packages for linux, binaries for macOS and windows. A homebrew
+The repo auto-builds packages for freebsd, linux, binaries for macOS and windows. A homebrew
 formula and a Docker image are also available, and easy to use.
 
 #### Install
@@ -18,7 +18,7 @@ curl https://raw.githubusercontent.com/golift/turbovanityurls/master/scripts/ins
 
 - Docker users can pull directly from the image built on Docker.
 ```
-docker pull golift/turbovanityurls:stable
+docker pull golift/turbovanityurls
 ```
 The config file is located at `/config.yaml`, pass that path into your container.
 
@@ -28,7 +28,9 @@ brew install golift/mugs/turbovanityurls
 ```
 
 - App Engine:
-  Just push it as-is after you edit app.yaml and config.yaml.
+  Run `glcoud app deploy` after you edit [app.yaml](app.yaml).
+
+- FreeBSD users can find a package on the [Releases](https://github.com/golift/turbovanityurls/releases) page.
 
 #### Fixes from [https://github.com/GoogleCloudPlatform/govanityurls](https://github.com/GoogleCloudPlatform/govanityurls)
 
