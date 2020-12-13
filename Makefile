@@ -119,7 +119,7 @@ $(BINARY).amd64.macos: *.go
 
 exe: $(BINARY).amd64.exe
 windows: $(BINARY).amd64.exe
-$(BINARY).amd64.exe: *.go 
+$(BINARY).amd64.exe: *.go
 	# Building windows 64-bit x86 binary.
 	GOOS=windows GOARCH=amd64 go build -o $@ -ldflags "-w -s -X $(VERSION_PATH)=$(VERSION)-$(ITERATION)"
 
@@ -246,15 +246,6 @@ test: lint
 lint:
 	# Checking lint.
 	golangci-lint run $(GOLANGCI_LINT_ARGS)
-
-# This is safe; recommended even.
-dep: vendor
-vendor: Gopkg.*
-	dep ensure --vendor-only
-
-# Don't run this unless you're ready to debug untested vendored dependencies.
-deps:
-	dep ensure --update
 
 # Homebrew stuff. macOS only.
 
