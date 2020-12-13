@@ -28,7 +28,7 @@ brew install golift/mugs/turbovanityurls
 ```
 
 - App Engine:
-  Run `glcoud app deploy` after you edit [app.yaml](app.yaml).
+Run `glcoud app deploy` after you edit [app.yaml](app.yaml).
 
 - FreeBSD users can find a package on the [Releases](https://github.com/golift/turbovanityurls/releases) page.
 
