@@ -28,7 +28,7 @@ before_script:
   - source .metadata.sh
 script:
   # Test Go and Docker.
-  - make test
+  - # make test
   - make docker
   # Test built docker image.
   - docker run $BINARY -v 2>&1 | grep -Eq "^$BINARY v$VERSION"
