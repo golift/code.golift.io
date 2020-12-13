@@ -51,6 +51,9 @@ paths:
   /cnfg:
     repo: https://github.com/golift/cnfg
     redir: https://github.com/golift/cnfg
+  /rotatorr:
+    repo: https://github.com/golift/rotatorr
+    redir: https://github.com/golift/rotatorr
   /deluge:
     repo: https://github.com/golift/deluge
     redir: https://github.com/golift/deluge
@@ -92,6 +95,9 @@ paths:
     wildcard: true
 
   # No repos.
+  /discord:
+    redir: https://discord.gg/YrWnVzjWMC
+    redir_paths: [""]
   /unifi-poller:
     redir: https://github.com/unifi-poller/unifi-poller
     redir_paths: [""]
