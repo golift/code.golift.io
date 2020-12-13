@@ -65,7 +65,8 @@ deploy:
       # make a copy of this file first because that command will change it.
       # or: make a new key manually at https://github.com/settings/tokens/new
       # then: echo <NEW_KEY_FROM_GH> | travis encrypt
-      secure: "ss7VYWtUf3VWDsWbDVWZCIq7cOJZ7G2w3rlIB95Du0xjH2lKX3j3pz8nVVRwa549X1oXrdL59ruixnhn1Oj/qaItB2DoAyS/F1xUjKDriTX2m31QHdMppeVTP4ajVrGEhoqfNXMHp53tbCtwZEg09yYryM6Y53tcznTWrxqmBWejC7oXNSbFatLwGTaVPQT4dB1sB72dQcqhZaWeQHI9tqM5rOtyT9hpx1JTp6twUTfI0u2gz/T3Yyz3ZU2LyQUWv6vabN1VeRTTvSv+yEmB3KUwk0bz765sECeuHVwi/S0DNhM+6h9F1AziISAtNuXBzhxy5uyqBKw6kIZQUHSpKZdMogUdgp9Sbs4vmO7nVcmA0NYL0ggGxlKio8ZqRyXIyWx5+BpkBICT7RzU4Zc1HsIGcuEPazF1nuA3HLIAyPFdM8NB2ttxL4xAue5RdaGONyLizQZTCo/9XX00LtaytpPki9eYWIAZPf9ta2Ngg3k72FLXEfwYJ/annaJr7Gp+YnFKMbcwJNPB2zQrUXIu2b2i9eLdVGE/U6PVZAGkP30y0q9FCc+S4VieqMWP0yd/oJ/0i8HXjd7HRjYkT4XmhvLloLToM5adcgKpg03cJL9x6eVGtX+dENtecD3tBEGHdM6Qx94mSOt0qffgMuKC7B7TvzR8a71mYZo1PwPmt3E="    overwrite: true
+      secure: "ss7VYWtUf3VWDsWbDVWZCIq7cOJZ7G2w3rlIB95Du0xjH2lKX3j3pz8nVVRwa549X1oXrdL59ruixnhn1Oj/qaItB2DoAyS/F1xUjKDriTX2m31QHdMppeVTP4ajVrGEhoqfNXMHp53tbCtwZEg09yYryM6Y53tcznTWrxqmBWejC7oXNSbFatLwGTaVPQT4dB1sB72dQcqhZaWeQHI9tqM5rOtyT9hpx1JTp6twUTfI0u2gz/T3Yyz3ZU2LyQUWv6vabN1VeRTTvSv+yEmB3KUwk0bz765sECeuHVwi/S0DNhM+6h9F1AziISAtNuXBzhxy5uyqBKw6kIZQUHSpKZdMogUdgp9Sbs4vmO7nVcmA0NYL0ggGxlKio8ZqRyXIyWx5+BpkBICT7RzU4Zc1HsIGcuEPazF1nuA3HLIAyPFdM8NB2ttxL4xAue5RdaGONyLizQZTCo/9XX00LtaytpPki9eYWIAZPf9ta2Ngg3k72FLXEfwYJ/annaJr7Gp+YnFKMbcwJNPB2zQrUXIu2b2i9eLdVGE/U6PVZAGkP30y0q9FCc+S4VieqMWP0yd/oJ/0i8HXjd7HRjYkT4XmhvLloLToM5adcgKpg03cJL9x6eVGtX+dENtecD3tBEGHdM6Qx94mSOt0qffgMuKC7B7TvzR8a71mYZo1PwPmt3E="
+    overwrite: true
     skip_cleanup: true
     cleanup: false
     file_glob: true
