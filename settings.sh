@@ -15,8 +15,7 @@ HBREPO="golift/homebrew-mugs"
 MAINT="David Newhall II <david at sleepers dot pro>"
 VENDOR="Go Lift"
 DESC="HTTP Server providing vanity go import paths."
-# FIX THIS.
-GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals,lll,wsl,wrapcheck,paralleltest,testpackage,nlreturn,forbidigo,exhaustivestruct,noctx,gosec,funlen"
+GOLANGCI_LINT_ARGS="--enable-all -D exhaustivestruct,nlreturn"
 # Example must exist at examples/$CONFIG_FILE.example
 CONFIG_FILE="config.yaml"
 LICENSE="Apache-2.0"

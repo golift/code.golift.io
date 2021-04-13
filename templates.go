@@ -1,3 +1,4 @@
+//nolint:gochecknoglobals,lll
 package main
 
 import (
@@ -48,19 +49,20 @@ var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(`<!DOCT
 
     <!-- package content -->
     <div class="value-props row">
+
       <div class="two-thirds column value-prop">
-        <h5>Configured Packages</h5>
+        <h5>Go Modules</h5>
         <ul>
 {{- range .Paths}} {{if and .Repo (not .Wildcard)}}
           <li><a href="{{.Path}}">{{TrimPrefix .Path "/"}}</a></li>{{end}}{{- end}}
         </ul>
       </div>
+
       <div class="one-third column value-prop">
         &copy; 2019-2021 {{.Title}}<br>
 {{if .Src}}        (<a href="{{.Src}}">source</a>){{end}}
       </div>
     </div>
-
   </div><!-- container class -->
 </body>
 </html>

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// nolint:forbidigo
 package main
 
 import (
@@ -29,7 +30,7 @@ import (
 )
 
 // Version is injected at build time.
-var Version = "development"
+var Version = "development" //nolint:gochecknoglobals
 
 // Flags are the CLI flags.
 type Flags struct {
@@ -122,11 +123,11 @@ func parseConfig(configPath string) (*Config, error) {
 
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reading config file: %w", err)
 	}
 
 	if err := yaml.Unmarshal(data, c); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshaling config file: %w", err)
 	}
 
 	if c.Title == "" {

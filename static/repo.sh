@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # This script installs the Go-Lift APT and/or YUM repo(s) on a Linux system.
+# Package Repository Hosting Provided by: https://PackageCloud.io
 # When run on macOS it attempts to tap the golift homebrew repo.
 # Optionally triggers a package install if $1 is non-empty.
 #
@@ -16,6 +17,8 @@ YUM=$(which yum)
 BREW=$(which brew)
 PKG=$1
 
+# All Debian/Ubuntu/etc packages are in the ubuntu/focal repo.
+###
 if [ -d /etc/apt/sources.list.d ] && [ "$APT" != "" ]; then
   curl -sL https://packagecloud.io/golift/pkgs/gpgkey | apt-key add -
   echo "deb https://packagecloud.io/golift/pkgs/ubuntu focal main" > /etc/apt/sources.list.d/golift.list
@@ -23,6 +26,8 @@ if [ -d /etc/apt/sources.list.d ] && [ "$APT" != "" ]; then
   [ "$PKG" = "" ] || apt install $PKG
 fi
 
+# All RedHat/CentOS/etc packages are in the el/6 repo.
+###
 if [ -d /etc/yum.repos.d ] && [ "$YUM" != "" ]; then
   cat <<EOF > /etc/yum.repos.d/golift.repo
 [golift]
@@ -42,6 +47,8 @@ EOF
   [ "$PKG" = "" ] || yum install $PKG
 fi
 
+# All macOS packages are in the same homebrew repo.
+###
 if [ "$(uname -s 2>/dev/null)" = "Darwin" ] && [ "$BREW" != "" ]; then
   brew tap golift/mugs
   [ "$PKG" = "" ] || brew install $PKG

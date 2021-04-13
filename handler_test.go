@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint:paralleltest,testpackage,funlen,noctx
 package main
 
 import (
@@ -53,7 +54,9 @@ func TestHandler(t *testing.T) {
 				"    repo: https://github.com/rakyll/portmidi\n",
 			path:     "/portmidi",
 			goImport: "example.com/portmidi git https://github.com/rakyll/portmidi",
-			goSource: "example.com/portmidi https://github.com/rakyll/portmidi https://github.com/rakyll/portmidi/tree/master{/dir} https://github.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/portmidi https://github.com/rakyll/portmidi " +
+				"https://github.com/rakyll/portmidi/tree/master{/dir} " +
+				"https://github.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
 		},
 		{
 			name: "Bitbucket Mercurial",
@@ -64,7 +67,9 @@ func TestHandler(t *testing.T) {
 				"    vcs: hg\n",
 			path:     "/gopdf",
 			goImport: "example.com/gopdf hg https://bitbucket.org/zombiezen/gopdf",
-			goSource: "example.com/gopdf https://bitbucket.org/zombiezen/gopdf https://bitbucket.org/zombiezen/gopdf/src/default{/dir} https://bitbucket.org/zombiezen/gopdf/src/default{/dir}/{file}#{file}-{line}",
+			goSource: "example.com/gopdf https://bitbucket.org/zombiezen/gopdf " +
+				"https://bitbucket.org/zombiezen/gopdf/src/default{/dir} " +
+				"https://bitbucket.org/zombiezen/gopdf/src/default{/dir}/{file}#{file}-{line}",
 		},
 		{
 			name: "Bitbucket Git",
@@ -75,7 +80,9 @@ func TestHandler(t *testing.T) {
 				"    vcs: git\n",
 			path:     "/mygit",
 			goImport: "example.com/mygit git https://bitbucket.org/zombiezen/mygit",
-			goSource: "example.com/mygit https://bitbucket.org/zombiezen/mygit https://bitbucket.org/zombiezen/mygit/src/default{/dir} https://bitbucket.org/zombiezen/mygit/src/default{/dir}/{file}#{file}-{line}",
+			goSource: "example.com/mygit https://bitbucket.org/zombiezen/mygit " +
+				"https://bitbucket.org/zombiezen/mygit/src/default{/dir} " +
+				"https://bitbucket.org/zombiezen/mygit/src/default{/dir}/{file}#{file}-{line}",
 		},
 		{
 			name: "subpath",
@@ -119,7 +126,9 @@ func TestHandler(t *testing.T) {
 				"    wildcard: true\n",
 			path:     "/rakyll/repo/foo",
 			goImport: "example.com/rakyll/repo git https://github.com/rakyll/repo",
-			goSource: "example.com/rakyll/repo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/rakyll/repo https://github.com/rakyll/repo " +
+				"https://github.com/rakyll/repo/tree/master{/dir} " +
+				"https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
 		},
 		{
 			name: "wildcard with no slashes",
@@ -130,7 +139,8 @@ func TestHandler(t *testing.T) {
 				"    wildcard: true\n",
 			path:     "/rakyll/repo",
 			goImport: "example.com/rakyll/repo git https://github.com/rakyll/repo",
-			goSource: "example.com/rakyll/repo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/rakyll/repo https://github.com/rakyll/repo " +
+				"https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
 		},
 		{
 			name: "wildcard with dashes",
@@ -141,7 +151,8 @@ func TestHandler(t *testing.T) {
 				"    wildcard: true\n",
 			path:     "/rakyll-repo",
 			goImport: "example.com/rakyll-repo git https://github.com/rakyll/repo",
-			goSource: "example.com/rakyll-repo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/rakyll-repo https://github.com/rakyll/repo " +
+				"https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
 		},
 		{
 			name: "wildcard bare word",
@@ -153,7 +164,8 @@ func TestHandler(t *testing.T) {
 				"    wildcard: true\n",
 			path:     "/rakyllrepo",
 			goImport: "example.com/rakyllrepo git https://github.com/rakyll/repo",
-			goSource: "example.com/rakyllrepo https://github.com/rakyll/repo https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/rakyllrepo https://github.com/rakyll/repo " +
+				"https://github.com/rakyll/repo/tree/master{/dir} https://github.com/rakyll/repo/blob/master{/dir}/{file}#L{line}",
 		},
 		{
 			name: "wildcard dashed repo",
@@ -164,7 +176,9 @@ func TestHandler(t *testing.T) {
 				"    wildcard: true\n",
 			path:     "/group/foo",
 			goImport: "example.com/group/foo git https://github.com/rakyll/package-group-foo",
-			goSource: "example.com/group/foo https://github.com/rakyll/package-group-foo https://github.com/rakyll/package-group-foo/tree/master{/dir} https://github.com/rakyll/package-group-foo/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/group/foo https://github.com/rakyll/package-group-foo " +
+				"https://github.com/rakyll/package-group-foo/tree/master{/dir} " +
+				"https://github.com/rakyll/package-group-foo/blob/master{/dir}/{file}#L{line}",
 		},
 		{
 			name: "display Gitlab inference",
@@ -174,7 +188,9 @@ func TestHandler(t *testing.T) {
 				"    repo: https://gitlab.com/rakyll/portmidi\n",
 			path:     "/portmidi",
 			goImport: "example.com/portmidi git https://gitlab.com/rakyll/portmidi",
-			goSource: "example.com/portmidi https://gitlab.com/rakyll/portmidi https://gitlab.com/rakyll/portmidi/tree/master{/dir} https://gitlab.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/portmidi https://gitlab.com/rakyll/portmidi " +
+				"https://gitlab.com/rakyll/portmidi/tree/master{/dir} " +
+				"https://gitlab.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
 		},
 		{
 			name: "display Gitlab inference",
@@ -185,35 +201,47 @@ func TestHandler(t *testing.T) {
 				"    repo: https://gitlab.com/rakyll/portmidi\n",
 			path:     "/portmidi",
 			goImport: "example.com/portmidi git https://gitlab.com/rakyll/portmidi",
-			goSource: "example.com/portmidi https://gitlab.com/rakyll/portmidi https://gitlab.com/rakyll/portmidi/tree/master{/dir} https://gitlab.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/portmidi https://gitlab.com/rakyll/portmidi " +
+				"https://gitlab.com/rakyll/portmidi/tree/master{/dir} " +
+				"https://gitlab.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
 		},
 	}
+
 	for _, test := range tests {
 		h, err := getTestConfig([]byte(test.config)).newHandler()
 		if err != nil {
 			t.Errorf("%s: newHandler: %v", test.name, err)
 			continue
 		}
+
 		s := httptest.NewServer(h)
+
 		resp, err := http.Get(s.URL + test.path)
 		if err != nil {
 			s.Close()
 			t.Errorf("%s: http.Get: %v", test.name, err)
+
 			continue
 		}
+
 		data, err := ioutil.ReadAll(resp.Body)
+
 		resp.Body.Close()
 		s.Close()
+
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("%s: status code = %s; want 200 OK", test.name, resp.Status)
 		}
+
 		if err != nil {
 			t.Errorf("%s: ioutil.ReadAll: %v", test.name, err)
 			continue
 		}
+
 		if got := findMeta(data, "go-import"); got != test.goImport {
 			t.Errorf("%s: meta go-import = %q; want %q", test.name, got, test.goImport)
 		}
+
 		if got := findMeta(data, "go-source"); got != test.goSource {
 			t.Errorf("%s: meta go-source = %q; want %q", test.name, got, test.goSource)
 		}
@@ -234,6 +262,7 @@ func TestBadConfigs(t *testing.T) {
 			"    repo: https://github.com/zombiezen/gopdf\n" +
 			"    vcs: git\n",
 	}
+
 	for _, config := range badConfigs {
 		_, err := getTestConfig([]byte(config)).newHandler()
 		if err == nil {
@@ -245,23 +274,29 @@ func TestBadConfigs(t *testing.T) {
 func getTestConfig(data []byte) *Config {
 	c := &Config{}
 	_ = yaml.Unmarshal(data, c)
+
 	return c
 }
 
 func findMeta(data []byte, name string) string {
 	var sep []byte
+
 	sep = append(sep, `<meta name="`...)
 	sep = append(sep, name...)
 	sep = append(sep, `" content="`...)
+
 	i := bytes.Index(data, sep)
 	if i == -1 {
 		return ""
 	}
+
 	content := data[i+len(sep):]
+
 	j := bytes.IndexByte(content, '"')
 	if j == -1 {
 		return ""
 	}
+
 	return string(content[:j])
 }
 
@@ -353,19 +388,25 @@ func TestPathConfigSetFind(t *testing.T) {
 		if s == "" {
 			return "<nil>"
 		}
+
 		return s
 	}
+
 	for _, test := range tests {
 		pset := make(PathConfigs, len(test.paths))
 		for i := range test.paths {
 			pset[i] = &PathConfig{Path: test.paths[i]}
 		}
-		sort.Sort(pset)
-		pc := pset.find(test.query)
+
 		var got string
+
+		sort.Sort(pset)
+
+		pc := pset.find(test.query)
 		if pc.PathConfig != nil {
 			got = pc.Path
 		}
+
 		if got != test.want || pc.Subpath != test.subpath {
 			t.Errorf("pathConfigSet(%v).find(%q) = %v, %v; want %v, %v",
 				test.paths, test.query, emptyToNil(got), pc.Subpath, emptyToNil(test.want), test.subpath)
@@ -394,20 +435,26 @@ func TestCacheHeader(t *testing.T) {
 			cacheControl: "public, max-age=0",
 		},
 	}
+
 	for _, test := range tests {
-		h, err := getTestConfig([]byte("host: example.com\npaths:\n  /portmidi:\n    repo: https://github.com/rakyll/portmidi\n" +
+		h, err := getTestConfig([]byte("host: example.com\npaths:\n  /portmidi:\n" +
+			"    repo: https://github.com/rakyll/portmidi\n" +
 			test.config)).newHandler()
 		if err != nil {
 			t.Errorf("%s: newHandler: %v", test.name, err)
 			continue
 		}
+
 		s := httptest.NewServer(h)
+
 		resp, err := http.Get(s.URL + "/portmidi")
 		if err != nil {
 			t.Errorf("%s: http.Get: %v", test.name, err)
 			continue
 		}
-		resp.Body.Close()
+
+		_ = resp.Body.Close()
+
 		got := resp.Header.Get("Cache-Control")
 		if got != test.cacheControl {
 			t.Errorf("%s: Cache-Control header = %q; want %q", test.name, got, test.cacheControl)

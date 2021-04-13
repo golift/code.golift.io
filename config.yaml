@@ -11,7 +11,8 @@ links:
     url: https://github.com/golift
   - title: Discord
     url: https://golift.io/discord
-
+  - title: Package Cloud
+    url: https://packagecloud.io/golift
 
 # If this is set, a source link to this path is displayed on the index page.
 # protip: setup a redirect for /source - see below.
@@ -118,3 +119,6 @@ paths:
   /source:
     redir_paths: [""]
     redir: https://github.com/golift/turbovanityurls
+  /notifiarr:
+    redir: https://github.com/Notifiarr/notifiarr
+    redir_paths: [""]

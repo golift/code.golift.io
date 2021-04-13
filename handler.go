@@ -30,7 +30,7 @@ type Handler struct {
 
 // vcsPrefixMap provides defaults for VCS type if it's not provided.
 // The list of strings is used in strings.HasPrefix().
-var vcsPrefixMap = map[string][]string{
+var vcsPrefixMap = map[string][]string{ //nolint:gochecknoglobals
 	"git": {"https://git", "https://bitbucket"},
 	"bzr": {"https://bazaar"},
 	"hg":  {"https://hg.", "https://mercurial"},

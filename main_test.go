@@ -1,3 +1,4 @@
+//nolint:paralleltest,funlen,testpackage
 package main
 
 import (
@@ -63,6 +64,7 @@ func TestParseConfig(t *testing.T) {
 		if err != nil {
 			t.Errorf("writing test temporary file failed\n%s", err)
 		}
+
 		_ = f.Close()
 
 		defer func() {
@@ -71,7 +73,7 @@ func TestParseConfig(t *testing.T) {
 			}
 		}()
 
-		_ = ioutil.WriteFile(f.Name(), []byte(test.config), 0644)
+		_ = ioutil.WriteFile(f.Name(), []byte(test.config), 0600)
 
 		c, err := parseConfig(f.Name())
 		if err != nil {
