@@ -38,22 +38,6 @@ paths:
   /badgedata:
     repo: https://github.com/golift/badgedata
     redir: https://github.com/golift/badgedata
-
-  /unifi:
-    repo: https://github.com/unifi-poller/unifi
-    redir: https://github.com/unifi-poller/unifi
-    image_url: https://docs.golift.io/svg/ubiquiti_color.svg
-    description: Package unifi provides API methods to extract client and device data from a UniFi Controller.
-      This library is used by UniFi Poller to collect and graph network data.
-    links:
-      - url: https://github.com/unifi-poller/unifi-poller
-        title: "UniFi Poller"
-      - url: https://grafana.com/dashboards?search=unifi-poller
-        title: "Grafana Dashboards"
-      - url: https://discord.gg/KnyKYt2
-        title: "Ubiquiti Discord"
-    cache_max_age: 2345
-
   /cnfg:
     repo: https://github.com/golift/cnfg
     redir: https://github.com/golift/cnfg
@@ -81,9 +65,6 @@ paths:
   /version:
     repo: https://github.com/golift/version
     redir: https://github.com/golift/version
-  /rar:
-    repo: https://github.com/jkotra/gorar
-    redir: https://github.com/jkotra/gorar
   /xtractr:
     repo: https://github.com/golift/xtractr
     redir: https://github.com/golift/xtractr
@@ -101,24 +82,34 @@ paths:
     wildcard: true
 
   # No repos.
+  # Giving an item a "name" puts it in the Applications list.
   /discord:
     redir: https://discord.gg/YrWnVzjWMC
     redir_paths: [""]
   /unifi-poller:
+    name: "UniFi Poller"
     redir: https://github.com/unifi-poller/unifi-poller
     redir_paths: [""]
   /secspy:
+    name: "SecSpy"
     redir: https://github.com/davidnewhall/secspy
     redir_paths: [""]
   /unpackerr:
+    name: "Unpackerr"
     redir: https://github.com/davidnewhall/unpackerr
     redir_paths: [""]
   /motifini:
+    name: "Motifini"
     redir: https://github.com/davidnewhall/motifini
     redir_paths: [""]
+  /notifiarr:
+    name: "Notifiarr"
+    redir: https://github.com/Notifiarr/notifiarr
+    redir_paths: [""]
+  /hello-world:
+    name: "Hello World"
+    redir_paths: [""]
+    redir: https://github.com/golift/application-builder
   /source:
     redir_paths: [""]
     redir: https://github.com/golift/turbovanityurls
-  /notifiarr:
-    redir: https://github.com/Notifiarr/notifiarr
-    redir_paths: [""]

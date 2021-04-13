@@ -62,6 +62,7 @@ type PathConfig struct {
 	Display      string   `yaml:"display,omitempty"`
 	VCS          string   `yaml:"vcs,omitempty"`
 	Wildcard     bool     `yaml:"wildcard,omitempty"`
+	Name         string   `yaml:"name,omitempty"` // if set, treated as an application
 	cacheControl string
 }
 

@@ -50,11 +50,19 @@ var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(`<!DOCT
     <!-- package content -->
     <div class="value-props row">
 
-      <div class="two-thirds column value-prop">
+      <div class="one-third column value-prop">
         <h5>Go Modules</h5>
         <ul>
-{{- range .Paths}} {{if and .Repo (not .Wildcard)}}
+{{- range .Paths}} {{if and .Repo (not .Wildcard) (not .Name)}}
           <li><a href="{{.Path}}">{{TrimPrefix .Path "/"}}</a></li>{{end}}{{- end}}
+        </ul>
+      </div>
+
+      <div class="one-third column value-prop">
+        <h5>Applications</h5>
+        <ul>
+	{{- range .Paths}} {{if .Name}}
+          <li><a href="{{.Redir}}">{{.Name}}</a></li>{{end}}{{- end}}
         </ul>
       </div>
 
