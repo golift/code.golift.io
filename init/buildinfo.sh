@@ -1,6 +1,6 @@
-# This file is read in by metadata.sh.
+# This file is read in by settings.sh.
 # These values are not generally user configurable and this file is overwritten on upgrades.
-# Override values in here by setting them in .metadata.sh; do not change this file.
+# Override values in here by setting them in settings.sh; do not change this file.
 ##########
 
 # Dynamic. Recommend not changing.

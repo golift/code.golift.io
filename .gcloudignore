@@ -12,7 +12,7 @@
 .gitignore
 .travis.yml
 .secret_files.tar.enc
-.metadata.sh
+settings.sh
 
 scripts
 init

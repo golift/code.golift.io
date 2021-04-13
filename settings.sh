@@ -16,9 +16,7 @@ MAINT="David Newhall II <david at sleepers dot pro>"
 VENDOR="Go Lift"
 DESC="HTTP Server providing vanity go import paths."
 # FIX THIS.
-GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals -D lll -D unused -D wsl \
-  -D wrapcheck -D paralleltest -D testpackage -D nlreturn -D gosimple \
-  -D exhaustivestruct -D noctx -D gosec -D goerr113 -D funlen"
+GOLANGCI_LINT_ARGS="--enable-all -D gochecknoglobals,lll,wsl,wrapcheck,paralleltest,testpackage,nlreturn,forbidigo,exhaustivestruct,noctx,gosec,funlen"
 # Example must exist at examples/$CONFIG_FILE.example
 CONFIG_FILE="config.yaml"
 LICENSE="Apache-2.0"
@@ -41,3 +39,9 @@ SOURCE_PATH=https://codeload.github.com/${GHUSER}/${REPO}/tar.gz/v${VERSION}
 
 export BINARY GHUSER HBREPO MAINT VENDOR DESC GOLANGCI_LINT_ARGS CONFIG_FILE
 export LICENSE FORMULA SOURCE_URL URL VERSION_PATH SOURCE_PATH
+
+### Optional ###
+
+# Import this signing key only if it's in the keyring.
+gpg --list-keys 2>/dev/null | grep -q B93DD66EF98E54E2EAE025BA0166AD34ABC5A57C
+[ "$?" != "0" ] || export SIGNING_KEY=B93DD66EF98E54E2EAE025BA0166AD34ABC5A57C

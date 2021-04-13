@@ -37,6 +37,12 @@ var vcsPrefixMap = map[string][]string{
 	"svn": {"https://svn."},
 }
 
+// Errors this packages creates.
+var (
+	ErrNoHostValue = fmt.Errorf("must provide host value in config")
+	ErrUnknownVCS  = fmt.Errorf("unknown VCS configuration")
+)
+
 // PathConfigs contains our list of configured routing-paths.
 type PathConfigs []*PathConfig
 
@@ -75,7 +81,7 @@ func (c *Config) newHandler() (*Handler, error) {
 	h := &Handler{Config: c}
 
 	if c.Host == "" {
-		return nil, fmt.Errorf("must provide host value in config")
+		return nil, ErrNoHostValue
 	}
 
 	for p := range h.Paths {
@@ -107,7 +113,7 @@ func (p *PathConfig) setRepoCacheControl(globalCC *uint64) {
 	case globalCC != nil:
 		p.cacheControl = fmt.Sprintf("public, max-age=%d", *globalCC)
 	default:
-		p.cacheControl = fmt.Sprintf("public, max-age=86400") // 24 hours (in seconds)
+		p.cacheControl = "public, max-age=86400" // 24 hours (in seconds)
 	}
 }
 
@@ -128,7 +134,7 @@ func (p *PathConfig) setRepoVCS() (err error) {
 	default:
 		// Already filled in, make sure it's supported.
 		if _, ok := vcsPrefixMap[p.VCS]; !ok {
-			return fmt.Errorf("configuration for %v: unknown VCS %s", p, p.VCS)
+			return fmt.Errorf("%w: %v: %s", ErrUnknownVCS, p, p.VCS)
 		}
 	}
 
@@ -145,7 +151,7 @@ func findRepoVCS(repo string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("cannot infer VCS from %s", repo)
+	return "", fmt.Errorf("%w: %s", ErrUnknownVCS, repo)
 }
 
 // NotFound redirects 404 requests if a redirect URL is set.
@@ -159,7 +165,7 @@ func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:cyclop
 	switch pc := h.PathConfigs.find(r.URL.Path); {
 	case pc.PathConfig == nil && r.URL.Path != "/":
 		// Unknown URI
@@ -304,8 +310,10 @@ func (pset PathConfigs) find(path string) PathReq {
 	// e.g. given pset ["/", "/abc", "/abc/def", "/xyz"]
 	//  * query "/abc/foo" returns "/abc" with a subpath of "foo"
 	//  * query "/x" returns "/" with a subpath of "x"
-	lenShortestSubpath := len(path)
-	var p PathReq
+	var (
+		lenShortestSubpath = len(path)
+		p                  PathReq
+	)
 
 	// After binary search with the >= lexicographic comparison,
 	// nothing greater than i will be a prefix of path.
