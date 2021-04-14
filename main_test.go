@@ -1,40 +1,46 @@
-//nolint:paralleltest,funlen,testpackage
-package main
+package main_test
 
 import (
 	"io/ioutil"
 	"syscall"
 	"testing"
+
+	main "golift.io/turbovanityurls"
 )
 
 func TestParseFlags(t *testing.T) {
+	t.Parallel()
+
 	test := []string{"-l", "127.0.0.1:456", "-c", "config.file", "-v"}
-	flags := parseFlags(test)
+	flags := main.ParseFlags(test)
 
-	if flags.listenAddr != test[1] {
-		t.Errorf("test flag was not parsed properly: %v", flags.listenAddr)
+	if flags.ListenAddr != test[1] {
+		t.Errorf("test flag was not parsed properly: %v", flags.ListenAddr)
 	}
 
-	if flags.configPath != test[3] {
-		t.Errorf("test flag was not parsed properly: %v", flags.configPath)
+	if flags.ConfigPath != test[3] {
+		t.Errorf("test flag was not parsed properly: %v", flags.ConfigPath)
 	}
 
-	if !flags.showVer {
-		t.Errorf("test flag was not parsed properly: showVer=%v", flags.showVer)
+	if !flags.ShowVer {
+		t.Errorf("test flag was not parsed properly: ShowVer=%v", flags.ShowVer)
 	}
 
-	flags = parseFlags([]string{})
+	flags = main.ParseFlags([]string{})
 
-	if flags.listenAddr != ":8080" {
-		t.Errorf("default flag value not correct: %v", flags.listenAddr)
+	if flags.ListenAddr != ":8080" {
+		t.Errorf("default flag value not correct: %v", flags.ListenAddr)
 	}
 
-	if flags.configPath != DefaultConfFile {
-		t.Errorf("default flag value not correct: %v", flags.configPath)
+	if flags.ConfigPath != main.DefaultConfFile {
+		t.Errorf("default flag value not correct: %v", flags.ConfigPath)
 	}
 }
 
+//nolint:funlen
 func TestParseConfig(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		host   string
 		config string
@@ -74,8 +80,9 @@ func TestParseConfig(t *testing.T) {
 		}()
 
 		_ = ioutil.WriteFile(f.Name(), []byte(test.config), 0600)
+		c := &main.Config{}
 
-		c, err := parseConfig(f.Name())
+		err = c.ParseConfig(f.Name())
 		if err != nil {
 			t.Errorf("test config produced unexpected error\n%v\n%s", err, test.config)
 		}
@@ -89,12 +96,14 @@ func TestParseConfig(t *testing.T) {
 		}
 	}
 
-	_, err := parseConfig("missing_file_here.asahsahsahsahs")
+	c := &main.Config{}
+
+	err := c.ParseConfig("missing_file_here.asahsahsahsahs")
 	if err == nil {
 		t.Errorf("parseConfig must return an error when the config file is missing")
 	}
 
-	_, err = parseConfig("/etc/passwd")
+	err = c.ParseConfig("/etc/passwd")
 	if err == nil {
 		t.Errorf("parseConfig must return n error with an invalid config file")
 	}

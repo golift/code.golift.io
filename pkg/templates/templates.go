@@ -1,18 +1,18 @@
 //nolint:gochecknoglobals,lll
-package main
+package templates
 
 import (
 	"strings"
 	"text/template"
 )
 
-var funcMap = map[string]interface{}{
+var Funcs = map[string]interface{}{
 	"TrimPrefix": strings.TrimPrefix,
 	// Add more if you need them.
 }
 
-// This is the index page.
-var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(`<!DOCTYPE html>
+// Index represents the index page.
+var Index = template.Must(template.New("index").Funcs(Funcs).Parse(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <title>{{.Title}} - {{.Host}}</title>
@@ -76,8 +76,8 @@ var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(`<!DOCT
 </html>
 `))
 
-// This is used for requests where go-get=1 is present.
-var gogetTmpl = template.Must(template.New("goget").Parse(`<!DOCTYPE html>
+// GoGet is used for requests where go-get=1 is present.
+var GoGet = template.Must(template.New("goget").Funcs(Funcs).Parse(`<!DOCTYPE html>
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -88,8 +88,8 @@ var gogetTmpl = template.Must(template.New("goget").Parse(`<!DOCTYPE html>
 </html>
 `))
 
-// This is a nicely formatted css-using page for an import path.
-var vanityTmpl = template.Must(template.New("vanity").Funcs(funcMap).Parse(`<!DOCTYPE html>
+// Vanity is a nicely formatted css-using page for an import path.
+var Vanity = template.Must(template.New("vanity").Funcs(Funcs).Parse(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">

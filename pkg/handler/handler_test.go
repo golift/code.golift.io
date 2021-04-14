@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint:paralleltest,testpackage,funlen,noctx
-package main
+//nolint:funlen,noctx
+package handler_test
 
 import (
 	"bytes"
@@ -23,10 +23,13 @@ import (
 	"sort"
 	"testing"
 
+	"golift.io/turbovanityurls/pkg/handler"
 	yaml "gopkg.in/yaml.v3"
 )
 
 func TestHandler(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		config string
@@ -208,9 +211,9 @@ func TestHandler(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		h, err := getTestConfig([]byte(test.config)).newHandler()
+		h, err := handler.New(getTestConfig([]byte(test.config)))
 		if err != nil {
-			t.Errorf("%s: newHandler: %v", test.name, err)
+			t.Errorf("%s: New: %v", test.name, err)
 			continue
 		}
 
@@ -249,6 +252,8 @@ func TestHandler(t *testing.T) {
 }
 
 func TestBadConfigs(t *testing.T) {
+	t.Parallel()
+
 	badConfigs := []string{
 		"host: example.com\npaths:\n" +
 			"  /missingvcs:\n" +
@@ -264,15 +269,15 @@ func TestBadConfigs(t *testing.T) {
 	}
 
 	for _, config := range badConfigs {
-		_, err := getTestConfig([]byte(config)).newHandler()
+		_, err := handler.New(getTestConfig([]byte(config)))
 		if err == nil {
 			t.Errorf("expected config to produce an error, but did not:\n%s", config)
 		}
 	}
 }
 
-func getTestConfig(data []byte) *Config {
-	c := &Config{}
+func getTestConfig(data []byte) *handler.Config {
+	c := &handler.Config{}
 	_ = yaml.Unmarshal(data, c)
 
 	return c
@@ -301,6 +306,8 @@ func findMeta(data []byte, name string) string {
 }
 
 func TestPathConfigSetFind(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		paths   []string
 		query   string
@@ -393,16 +400,16 @@ func TestPathConfigSetFind(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		pset := make(PathConfigs, len(test.paths))
+		pset := make(handler.PathConfigs, len(test.paths))
 		for i := range test.paths {
-			pset[i] = &PathConfig{Path: test.paths[i]}
+			pset[i] = &handler.PathConfig{Path: test.paths[i]}
 		}
 
 		var got string
 
 		sort.Sort(pset)
 
-		pc := pset.find(test.query)
+		pc := pset.Find(test.query)
 		if pc.PathConfig != nil {
 			got = pc.Path
 		}
@@ -415,6 +422,8 @@ func TestPathConfigSetFind(t *testing.T) {
 }
 
 func TestCacheHeader(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name         string
 		config       string
@@ -437,11 +446,11 @@ func TestCacheHeader(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		h, err := getTestConfig([]byte("host: example.com\npaths:\n  /portmidi:\n" +
+		h, err := handler.New(getTestConfig([]byte("host: example.com\npaths:\n  /portmidi:\n" +
 			"    repo: https://github.com/rakyll/portmidi\n" +
-			test.config)).newHandler()
+			test.config)))
 		if err != nil {
-			t.Errorf("%s: newHandler: %v", test.name, err)
+			t.Errorf("%s: New: %v", test.name, err)
 			continue
 		}
 

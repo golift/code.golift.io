@@ -13,35 +13,40 @@
 // limitations under the License.
 
 // govanityurls serves Go vanity URLs.
-package main
+package handler
 
 import (
 	"fmt"
 	"net/http"
 	"sort"
 	"strings"
+
+	"golift.io/turbovanityurls/pkg/templates"
 )
+
+// Config contains the config file data.
+type Config struct {
+	Title       string `yaml:"title,omitempty"`
+	Host        string `yaml:"host,omitempty"`
+	Description string `yaml:"description,omitempty"`
+	LogoURL     string `yaml:"logo_url,omitempty"`
+	Links       []struct {
+		Title string `yaml:"title,omitempty"`
+		URL   string `yaml:"url,omitempty"`
+	} `yaml:"links,omitempty"`
+	CacheAge   *uint64                `yaml:"cache_max_age,omitempty"`
+	Paths      map[string]*PathConfig `yaml:"paths,omitempty"`
+	RedirPaths []string               `yaml:"redir_paths,omitempty"`
+	Src        string                 `yaml:"src,omitempty"`
+	RedirIndex string                 `yaml:"redir_index,omitempty"`
+	Redir404   string                 `yaml:"redir_404,omitempty"`
+}
 
 // Handler contains all the running data for our web server.
 type Handler struct {
 	*Config
 	PathConfigs
 }
-
-// vcsPrefixMap provides defaults for VCS type if it's not provided.
-// The list of strings is used in strings.HasPrefix().
-var vcsPrefixMap = map[string][]string{ //nolint:gochecknoglobals
-	"git": {"https://git", "https://bitbucket"},
-	"bzr": {"https://bazaar"},
-	"hg":  {"https://hg.", "https://mercurial"},
-	"svn": {"https://svn."},
-}
-
-// Errors this packages creates.
-var (
-	ErrNoHostValue = fmt.Errorf("must provide host value in config")
-	ErrUnknownVCS  = fmt.Errorf("unknown VCS configuration")
-)
 
 // PathConfigs contains our list of configured routing-paths.
 type PathConfigs []*PathConfig
@@ -66,6 +71,21 @@ type PathConfig struct {
 	cacheControl string
 }
 
+// vcsPrefixMap provides defaults for VCS type if it's not provided.
+// The list of strings is used in strings.HasPrefix().
+var vcsPrefixMap = map[string][]string{ //nolint:gochecknoglobals
+	"git": {"https://git", "https://bitbucket"},
+	"bzr": {"https://bazaar"},
+	"hg":  {"https://hg.", "https://mercurial"},
+	"svn": {"https://svn."},
+}
+
+// Errors this packages creates.
+var (
+	ErrNoHostValue = fmt.Errorf("must provide host value in config")
+	ErrUnknownVCS  = fmt.Errorf("unknown VCS configuration")
+)
+
 // PathReq is returned by find() with a non-nil PathConfig
 // when a request has been matched to a path.
 // Host, LogoURL, and IndexTitle come unset.
@@ -78,7 +98,7 @@ type PathReq struct {
 	*PathConfig
 }
 
-func (c *Config) newHandler() (*Handler, error) {
+func New(c *Config) (*Handler, error) {
 	h := &Handler{Config: c}
 
 	if c.Host == "" {
@@ -167,7 +187,7 @@ func (h *Handler) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:cyclop
-	switch pc := h.PathConfigs.find(r.URL.Path); {
+	switch pc := h.PathConfigs.Find(r.URL.Path); {
 	case pc.PathConfig == nil && r.URL.Path != "/":
 		// Unknown URI
 		h.NotFound(w, r)
@@ -176,8 +196,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:c
 		http.Redirect(w, r, h.RedirIndex, http.StatusFound)
 	case pc.PathConfig == nil:
 		// Index page template.
-		templ := indexTmpl.Funcs(funcMap)
-		if err := templ.Execute(w, &h.Config); err != nil {
+		if err := templates.Index.Execute(w, &h.Config); err != nil {
 			http.Error(w, "cannot render the page", http.StatusInternalServerError)
 		}
 	case pc.RedirectablePath():
@@ -193,11 +212,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) { //nolint:c
 		pc.Host = h.Host
 		pc.IndexTitle = h.Title
 		pc.LogoURL = h.LogoURL
-		templ := vanityTmpl.Funcs(funcMap)
+		templ := templates.Vanity
 
 		if r.URL.Query().Get("go-get") == "1" {
 			// Use a smaller html page if this is a go-get request.
-			templ = gogetTmpl.Funcs(funcMap)
+			templ = templates.GoGet
 		}
 
 		if err := templ.Execute(w, &pc); err != nil {
@@ -286,7 +305,8 @@ func (pset PathConfigs) Swap(i, j int) {
 	pset[i], pset[j] = pset[j], pset[i]
 }
 
-func (pset PathConfigs) find(path string) PathReq {
+// Find returns the configured pathConfig for the request path provided.
+func (pset PathConfigs) Find(path string) PathReq {
 	// Fast path with binary search to retrieve exact matches
 	// e.g. given pset ["/", "/abc", "/xyz"], path "/def" won't match.
 	i := sort.Search(len(pset), func(i int) bool {

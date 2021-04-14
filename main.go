@@ -26,6 +26,7 @@ import (
 
 	"golift.io/badgedata"
 	_ "golift.io/badgedata/grafana"
+	"golift.io/turbovanityurls/pkg/handler"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -34,41 +35,27 @@ var Version = "development" //nolint:gochecknoglobals
 
 // Flags are the CLI flags.
 type Flags struct {
-	listenAddr string
-	configPath string
-	showVer    bool
+	ListenAddr string
+	ConfigPath string
+	ShowVer    bool
 }
 
-// Config contains the config file data.
 type Config struct {
-	Title       string `yaml:"title,omitempty"`
-	Host        string `yaml:"host,omitempty"`
-	Description string `yaml:"description,omitempty"`
-	LogoURL     string `yaml:"logo_url,omitempty"`
-	Links       []struct {
-		Title string `yaml:"title,omitempty"`
-		URL   string `yaml:"url,omitempty"`
-	} `yaml:"links,omitempty"`
-	CacheAge   *uint64                `yaml:"cache_max_age,omitempty"`
-	BDPath     string                 `yaml:"bd_path,omitempty"`
-	Paths      map[string]*PathConfig `yaml:"paths,omitempty"`
-	RedirPaths []string               `yaml:"redir_paths,omitempty"`
-	Src        string                 `yaml:"src,omitempty"`
-	RedirIndex string                 `yaml:"redir_index,omitempty"`
-	Redir404   string                 `yaml:"redir_404,omitempty"`
+	*handler.Config `yaml:",inline"`
+	BDPath          string `yaml:"bd_path,omitempty"`
 }
 
-func parseFlags(args []string) *Flags {
+func ParseFlags(args []string) *Flags {
 	flag := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	f := &Flags{listenAddr: ":" + os.Getenv("PORT")}
+	f := &Flags{ListenAddr: ":" + os.Getenv("PORT")}
 
-	if f.listenAddr == ":" {
-		f.listenAddr = ":8080"
+	if f.ListenAddr == ":" {
+		f.ListenAddr = ":8080"
 	}
 
-	flag.StringVar(&f.listenAddr, "l", f.listenAddr, "HTTP server listen address")
-	flag.StringVar(&f.configPath, "c", DefaultConfFile, "config file path")
-	flag.BoolVar(&f.showVer, "v", false, "show version and exit")
+	flag.StringVar(&f.ListenAddr, "l", f.ListenAddr, "HTTP server listen address")
+	flag.StringVar(&f.ConfigPath, "c", DefaultConfFile, "config file path")
+	flag.BoolVar(&f.ShowVer, "v", false, "show version and exit")
 
 	flag.Usage = func() {
 		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
@@ -81,20 +68,30 @@ func parseFlags(args []string) *Flags {
 }
 
 func main() {
-	flags := parseFlags(os.Args[1:])
-	if flags.showVer {
+	flags := ParseFlags(os.Args[1:])
+	if flags.ShowVer {
 		fmt.Printf("%v v%v\n", "turbovanityurls", Version)
 		os.Exit(0)
 	}
 
-	config, err := parseConfig(flags.configPath)
-	if err != nil {
+	if err := Setup(flags); err != nil {
 		log.Fatal(err)
 	}
 
-	vanityHandler, err := config.newHandler()
-	if err != nil {
+	if err := http.ListenAndServe(flags.ListenAddr, nil); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func Setup(flags *Flags) error {
+	config := &Config{}
+	if err := config.ParseConfig(flags.ConfigPath); err != nil {
+		return err
+	}
+
+	vanityHandler, err := handler.New(config.Config)
+	if err != nil {
+		return fmt.Errorf("config file: %w", err)
 	}
 
 	if config.BDPath != "" {
@@ -103,19 +100,15 @@ func main() {
 
 	http.Handle("/", vanityHandler)
 
-	if strings.HasPrefix(flags.listenAddr, ":") {
+	if strings.HasPrefix(flags.ListenAddr, ":") {
 		// A message so you know when it's started; a clickable link for dev'ing.
-		log.Println("Listening at http://127.0.0.1" + flags.listenAddr)
+		log.Println("Listening at http://127.0.0.1" + flags.ListenAddr)
 	}
 
-	if err := http.ListenAndServe(flags.listenAddr, nil); err != nil {
-		log.Fatal(err)
-	}
+	return nil
 }
 
-func parseConfig(configPath string) (*Config, error) {
-	c := &Config{Paths: make(map[string]*PathConfig)}
-
+func (c *Config) ParseConfig(configPath string) error {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) && configPath == DefaultConfFile {
 		log.Printf("Default Config File Not Found: %s - trying ./config.yaml", configPath)
 		configPath = "config.yaml"
@@ -123,11 +116,11 @@ func parseConfig(configPath string) (*Config, error) {
 
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("reading config file: %w", err)
+		return fmt.Errorf("reading config file: %w", err)
 	}
 
 	if err := yaml.Unmarshal(data, c); err != nil {
-		return nil, fmt.Errorf("unmarshaling config file: %w", err)
+		return fmt.Errorf("unmarshaling config file: %w", err)
 	}
 
 	if c.Title == "" {
@@ -138,5 +131,5 @@ func parseConfig(configPath string) (*Config, error) {
 		c.BDPath += "/"
 	}
 
-	return c, nil
+	return nil
 }
