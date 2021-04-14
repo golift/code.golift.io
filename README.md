@@ -3,17 +3,21 @@ turbo-vanityURLs - golift.io source
 
 This is the source that runs [https://golift.io](https://golift.io).
 
-#### Automatic Builds
+# Automatic Builds
 
 This can be run anywhere, really. Packages and builds for lots of things are provided.
 The repo auto-builds packages for freebsd, linux, binaries for macOS and windows. A homebrew
 formula and a Docker image are also available, and easy to use.
 
-#### Install
+# Install
 
-- Linux users can use this script to download and install the latest package for their system.
+- Linux users can use this script to download and install the latest package for their system.<br>
+Linux repository hosting provided by
+[![packagecloud](https://docs.golift.io/integrations/packagecloud-full.png "PackageCloud.io")](http://packagecloud.io)<br>
+This works on any system with apt or yum. If your system does not use APT or YUM, then download a package from the [Releases](https://github.com/Notifiarr/notifiarr/releases) page.
+Install the Go Lift package repo and Turbo Vanity URLs with this command:
 ```
-curl https://raw.githubusercontent.com/golift/turbovanityurls/master/scripts/install.sh | sudo bash
+curl -s https://golift.io/repo.sh | sudo bash -s - turbovanityurls
 ```
 
 - Docker users can pull directly from the image built on Docker.
@@ -32,7 +36,9 @@ Run `glcoud app deploy` after you edit [app.yaml](app.yaml).
 
 - FreeBSD users can find a package on the [Releases](https://github.com/golift/turbovanityurls/releases) page.
 
-#### Fixes from [https://github.com/GoogleCloudPlatform/govanityurls](https://github.com/GoogleCloudPlatform/govanityurls)
+# Changes
+
+Differences from [https://github.com/GoogleCloudPlatform/govanityurls](https://github.com/GoogleCloudPlatform/govanityurls):
 
 -   **Wildcard Support** Example: You can point a path (even /) to a github user/org. [#25](https://github.com/GoogleCloudPlatform/govanityurls/pull/25)
 -   App Engine Go 1.12. `go112` [#29](https://github.com/GoogleCloudPlatform/govanityurls/pull/29)
@@ -48,7 +54,7 @@ Run `glcoud app deploy` after you edit [app.yaml](app.yaml).
 -   Root path repos work now. [#23](https://github.com/GoogleCloudPlatform/govanityurls/pull/23)
 -   Better auto-detection for repo type. [#26](https://github.com/GoogleCloudPlatform/govanityurls/pull/26) and [#27](https://github.com/GoogleCloudPlatform/govanityurls/pull/27)
 
-#### New Features
+## New Features
 -   See the [new manual](examples/MANUAL.md), and the [example config file](examples/config.yaml.example).
 -   Path redirects. Issue 302s for specific paths.
     -   Useful for redirecting to download links on GitHub.
@@ -56,9 +62,24 @@ Run `glcoud app deploy` after you edit [app.yaml](app.yaml).
 -   Configurable descriptions and logos.
 -   Better CSS/HTML templates.
 
-#### Other
+## Other
 Incorporated a badge package for data collection and return.
 In other words this app can collect data from "things"
 (like the public grafana api) and store that data for later requests.
 I use this to populate badge/shield data for things like "grafana
 dashboard download counter" - [https://github.com/golift/badgedata](https://github.com/golift/badgedata). It's [3 lines of code](https://github.com/golift/turbovanityurls/commit/89451a0a783b9c1991313c0a5cc6e70e9c023e14#diff-7ddfb3e035b42cd70649cc33393fe32c) you can pull out real easy. You can also disable badgedata in the config file.
+
+# Intergrations
+
+The following fine folks are providing their services, completely free! These service
+integrations are used for things like storage, building, compiling, distribution and
+documentation support. This project succeeds because of them. Thank you!
+
+<p style="text-align: center;">
+<a title="PackageCloud" alt="PackageCloud" href="https://packagecloud.io"><img src="https://docs.golift.io/integrations/packagecloud.png"/></a>
+<a title="GitHub" alt="GitHub" href="https://GitHub.com"><img src="https://docs.golift.io/integrations/octocat.png"/></a>
+<a title="Docker Cloud" alt="Docker" href="https://cloud.docker.com"><img src="https://docs.golift.io/integrations/docker.png"/></a>
+<a title="Travis-CI" alt="Travis-CI" href="https://Travis-CI.com"><img src="https://docs.golift.io/integrations/travis-ci.png"/></a>
+<a title="Homebrew" alt="Homebrew" href="https://brew.sh"><img src="https://docs.golift.io/integrations/homebrew.png"/></a>
+<a title="Go Lift" alt="Go Lift" href="https://golift.io"><img src="https://docs.golift.io/integrations/golift.png"/></a>
+</p>
