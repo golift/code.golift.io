@@ -6,7 +6,7 @@
 /*.conf
 /*.gz
 /*.zip
-/unpackerr*.1
+/*.1
 /*.deb
 /*.rpm
 /*.txz
@@ -16,6 +16,7 @@
 /*.*.linux
 /*.*.freebsd
 /*.rb
+/*.upx
 *.sha256
 /vendor
 .DS_Store

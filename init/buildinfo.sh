@@ -3,6 +3,8 @@
 # Override values in here by setting them in settings.sh; do not change this file.
 ##########
 
+VENDOR="Go Lift <code@golift.io>"
+
 # Dynamic. Recommend not changing.
 VVERSION=$(git describe --abbrev=0 --tags $(git rev-list --tags --max-count=1))
 VERSION="$(echo $VVERSION | tr -d v | grep -E '^\S+$' || echo development)"
@@ -17,4 +19,4 @@ BRANCH="${TRAVIS_BRANCH:-${GIT_BRANCH}}"
 # Defines docker manifest/build types.
 BUILDS="linux:armhf:arm linux:arm64:arm64 linux:amd64:amd64 linux:i386:386"
 
-export VVERSION VERSION ITERATION DATE BRANCH COMMIT BUILDS
+export VENDOR VVERSION VERSION ITERATION DATE BRANCH COMMIT BUILDS

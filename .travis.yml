@@ -16,6 +16,7 @@ addons:
     - zip
     - debsigs
     - gnupg
+    - upx
 go:
   - 1.16.x
 services:
