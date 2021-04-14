@@ -68,10 +68,6 @@ paths:
   /xtractr:
     repo: https://github.com/golift/xtractr
     redir: https://github.com/golift/xtractr
-  /turbovanityurls:
-    repo: https://github.com/golift/turbovanityurls
-    redir: https://github.com/golift/turbovanityurls
-    redir_paths: [""]
 
   # Unused Examples.
   /david/:
@@ -85,6 +81,10 @@ paths:
   # Giving an item a "name" puts it in the Applications list.
   /discord:
     redir: https://discord.gg/YrWnVzjWMC
+    redir_paths: [""]
+  /turbovanityurls:
+    name: "Turbo Vanity URLs"
+    redir: https://github.com/golift/turbovanityurls
     redir_paths: [""]
   /unifi-poller:
     name: "UniFi Poller"
