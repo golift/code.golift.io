@@ -1,18 +1,20 @@
 # Change this line.
 /turbovanityurls
-
+/init/macos/*.app/Contents/MacOS/*
 # The rest is probably fine.
-/rsrc.syso
+/rsrc*.syso
+/*.log
 /*.conf
 /*.gz
 /*.zip
+/*.upx
 /*.1
 /*.deb
 /*.rpm
 /*.txz
 /*.*.arm
 /*.*.exe
-/.*.macos
+/*.*.macos
 /*.*.linux
 /*.*.freebsd
 /*.rb
@@ -34,4 +36,4 @@ github_deploy_key*
 .metadata.make
 /after-install-rendered.sh
 /before-remove-rendered.sh
-gpg.signing.key
+/gpg.signing.key
