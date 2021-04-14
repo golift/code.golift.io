@@ -194,9 +194,9 @@ freebsd_packages: freebsd_pkg freebsd386_pkg freebsdarm_pkg
 
 macapp: $(MACAPP).app
 $(MACAPP).app: macos
-  [ "$(MACAPP)" = "" ] mkdir -p init/macos/$(MACAPP).app/Contents/MacOS
-  [ "$(MACAPP)" = "" ] cp $(BINARY).amd64.macos init/macos/$(MACAPP).app/Contents/MacOS/$(MACAPP)
-  [ "$(MACAPP)" = "" ] cp -rp init/macos/$(MACAPP).app $(MACAPP).app
+	[ -z "$(MACAPP)" ] || mkdir -p init/macos/$(MACAPP).app/Contents/MacOS
+	[ -z "$(MACAPP)" ] || cp $(BINARY).amd64.macos init/macos/$(MACAPP).app/Contents/MacOS/$(MACAPP)
+	[ -z "$(MACAPP)" ] || cp -rp init/macos/$(MACAPP).app $(MACAPP).app
 
 rpm: $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm
 $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm: package_build_linux check_fpm
