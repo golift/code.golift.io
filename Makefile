@@ -78,10 +78,13 @@ release: clean linux_packages freebsd_packages windows
 	# Generating File Hashes
 	openssl dgst -r -sha256 $@/* | sed 's#release/##' | tee $@/checksums.sha256.txt
 
+# DMG only makes a DMG file is MACAPP is set. Otherwise, it makes a gzipped binary for macOS.
 dmg: clean macapp
 	mkdir -p release
-	hdiutil create release/$(MACAPP).dmg -srcfolder $(MACAPP).app -ov
-	openssl dgst -r -sha256 release/* | sed 's#release/##' | tee release/dmg_checksum.sha256.txt
+	[ "$(MACAPP)" = "" ] || hdiutil create release/$(MACAPP).dmg -srcfolder $(MACAPP).app -ov
+	[ "$(MACAPP)" != "" ] || mv $(BINARY).*.macos release/
+	[ "$(MACAPP)" != "" ] || gzip -9r release/
+	openssl dgst -r -sha256 release/* | sed 's#release/##' | tee release/macos_checksum.sha256.txt
 
 # Delete all build assets.
 clean:
@@ -191,10 +194,9 @@ freebsd_packages: freebsd_pkg freebsd386_pkg freebsdarm_pkg
 
 macapp: $(MACAPP).app
 $(MACAPP).app: macos
-	@[ "$(MACAPP)" != "" ] || (echo "Must set 'MACAPP' in settings.sh!" && exit 1)
-	mkdir -p init/macos/$(MACAPP).app/Contents/MacOS
-	cp $(BINARY).amd64.macos init/macos/$(MACAPP).app/Contents/MacOS/$(MACAPP)
-	cp -rp init/macos/$(MACAPP).app $(MACAPP).app
+  [ "$(MACAPP)" = "" ] mkdir -p init/macos/$(MACAPP).app/Contents/MacOS
+  [ "$(MACAPP)" = "" ] cp $(BINARY).amd64.macos init/macos/$(MACAPP).app/Contents/MacOS/$(MACAPP)
+  [ "$(MACAPP)" = "" ] cp -rp init/macos/$(MACAPP).app $(MACAPP).app
 
 rpm: $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm
 $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm: package_build_linux check_fpm
