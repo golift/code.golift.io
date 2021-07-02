@@ -87,8 +87,12 @@ paths:
     redir: https://github.com/golift/turbovanityurls
     redir_paths: [""]
   /unifi-poller:
-    name: "UniFi Poller"
-    redir: https://github.com/unifi-poller/unifi-poller
+    name: "UnPoller"
+    redir: https://github.com/unpoller/unpoller
+    redir_paths: [""]
+  /unpoller:
+    name: "UnPoller"
+    redir: https://github.com/unpoller/unpoller
     redir_paths: [""]
   /secspy:
     name: "SecSpy"
