@@ -68,6 +68,9 @@ paths:
   /xtractr:
     repo: https://github.com/golift/xtractr
     redir: https://github.com/golift/xtractr
+  /qbit:
+    repo: https://github.com/golift/qbit
+    redir: https://github.com/golift/qbit
 
   # Unused Examples.
   /david/:
