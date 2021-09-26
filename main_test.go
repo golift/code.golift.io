@@ -79,7 +79,7 @@ func TestParseConfig(t *testing.T) {
 			}
 		}()
 
-		_ = ioutil.WriteFile(f.Name(), []byte(test.config), 0600)
+		_ = ioutil.WriteFile(f.Name(), []byte(test.config), 0o600)
 		c := &main.Config{}
 
 		err = c.ParseConfig(f.Name())

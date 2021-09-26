@@ -14,7 +14,7 @@ GHUSER="golift"
 HBREPO="golift/homebrew-mugs"
 MAINT="David Newhall II <david at sleepers dot pro>"
 DESC="HTTP Server providing vanity go import paths."
-GOLANGCI_LINT_ARGS="--enable-all -D exhaustivestruct,nlreturn"
+GOLANGCI_LINT_ARGS="--enable-all -D exhaustivestruct,nlreturn,tagliatelle"
 # Example must exist at examples/$CONFIG_FILE.example
 CONFIG_FILE="config.yaml"
 LICENSE="Apache-2.0"
