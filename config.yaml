@@ -41,6 +41,9 @@ paths:
   /cnfg:
     repo: https://github.com/golift/cnfg
     redir: https://github.com/golift/cnfg
+  /cnfgfile:
+    repo: https://github.com/golift/cnfgfile
+    redir: https://github.com/golift/cnfgfile
   /rotatorr:
     repo: https://github.com/golift/rotatorr
     redir: https://github.com/golift/rotatorr
@@ -71,6 +74,9 @@ paths:
   /qbit:
     repo: https://github.com/golift/qbit
     redir: https://github.com/golift/qbit
+  /datacounter:
+    repo: https://github.com/golift/datacounter
+    redir: https://github.com/golift/datacounter
 
   # Unused Examples.
   /david/:
