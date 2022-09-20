@@ -16,12 +16,18 @@ APT=$(which apt)
 YUM=$(which yum)
 BREW=$(which brew)
 PKG=$1
+extra=""
+
+if [ -d /usr/share/keyrings ]; then 
+  curl -sL https://packagecloud.io/golift/pkgs/gpgkey | gpg --dearmor > /usr/share/keyrings/golift-archive-keyring.gpg
+  extra="[signed-by=/usr/share/keyrings/golift-archive-keyring.gpg] "
+fi
 
 # All Debian/Ubuntu/etc packages are in the ubuntu/focal repo.
 ###
 if [ -d /etc/apt/sources.list.d ] && [ "$APT" != "" ]; then
   curl -sL https://packagecloud.io/golift/pkgs/gpgkey | apt-key add -
-  echo "deb https://packagecloud.io/golift/pkgs/ubuntu focal main" > /etc/apt/sources.list.d/golift.list
+  echo "deb ${extra}https://packagecloud.io/golift/pkgs/ubuntu focal main" > /etc/apt/sources.list.d/golift.list
   apt update
   [ "$PKG" = "" ] || apt install $PKG
 fi

@@ -74,17 +74,15 @@ paths:
   /qbit:
     repo: https://github.com/golift/qbit
     redir: https://github.com/golift/qbit
+  /nzbget:
+    repo: https://github.com/golift/nzbget
+    redir: https://github.com/golift/nzbget
+  /cache:
+    repo: https://github.com/golift/cache
+    redir: https://github.com/golift/cache
   /datacounter:
     repo: https://github.com/golift/datacounter
     redir: https://github.com/golift/datacounter
-
-  # Unused Examples.
-  /david/:
-    repo: https://github.com/davidnewhall/
-    wildcard: true
-  /captain-:
-    repo: https://github.com/davidnewhall/
-    wildcard: true
 
   # No repos.
   # Giving an item a "name" puts it in the Applications list.
