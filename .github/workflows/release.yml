@@ -116,10 +116,10 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
-    needs: [release-test, macapp-test]
+    needs: [release-test]
     strategy:
       matrix:
-        files: [release, dmg-release]
+        files: [release]
     name: Deploy GitHub Release
     runs-on: ubuntu-latest
     steps:
