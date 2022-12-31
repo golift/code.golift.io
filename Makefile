@@ -491,7 +491,7 @@ pkg/bindata/bindata.go: pkg/bindata/templates/* pkg/bindata/files/* pkg/bindata/
 
 docker:
 	docker buildx build --load --pull --tag $(BINARY) \
-		--platform linux/amd64 \
+		--platform linux/arm64/v8 \
 		--build-arg "BUILD_DATE=$(DATE)" \
 		--build-arg "COMMIT=$(COMMIT)" \
 		--build-arg "VERSION=$(VERSION)-$(ITERATION)" \
