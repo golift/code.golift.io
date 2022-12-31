@@ -36,6 +36,7 @@ var Version = "development" //nolint:gochecknoglobals
 // Flags are the CLI flags.
 type Flags struct {
 	ListenAddr string
+	Timeout    time.Duration
 	ConfigPath string
 	ShowVer    bool
 }
@@ -45,6 +46,8 @@ type Config struct {
 	BDPath          string `yaml:"bd_path,omitempty"`
 }
 
+const defaultTimeout = 15 * time.Second
+
 func ParseFlags(args []string) *Flags {
 	flag := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	f := &Flags{ListenAddr: ":" + os.Getenv("PORT")}
@@ -53,12 +56,13 @@ func ParseFlags(args []string) *Flags {
 		f.ListenAddr = ":8080"
 	}
 
+	flag.DurationVar(&f.Timeout, "t", defaultTimeout, "HTTP request timeout")
 	flag.StringVar(&f.ListenAddr, "l", f.ListenAddr, "HTTP server listen address")
 	flag.StringVar(&f.ConfigPath, "c", DefaultConfFile, "config file path")
 	flag.BoolVar(&f.ShowVer, "v", false, "show version and exit")
 
 	flag.Usage = func() {
-		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>]")
+		fmt.Println("Usage: turbovanityurls [-c <config-file>] [-l <listen-address>] [-t <timeout>]")
 		flag.PrintDefaults()
 	}
 
@@ -80,7 +84,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              flags.ListenAddr,
-		ReadHeaderTimeout: 15 * time.Second,
+		ReadHeaderTimeout: flags.Timeout,
 	}
 
 	if err := server.ListenAndServe(); err != nil {
