@@ -1,6 +1,12 @@
 linters:
   enable-all: true
   disable:
+  # deprecated
+    - deadcode
+    - ifshort
+    - varcheck
+    - structcheck
+    - nosnakecase
     - maligned
     - scopelint
     - interfacer
@@ -8,6 +14,7 @@ linters:
     - exhaustruct
     - exhaustive
     - exhaustivestruct
+    # unused
     - nlreturn
     - tagliatelle
     - varnamelen
