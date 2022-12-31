@@ -11,19 +11,6 @@ MD2ROFF_BIN=github.com/davidnewhall/md2roff@v0.0.1
 # rsrc adds an ico file to a Windows exe file.
 RSRC_BIN=github.com/akavel/rsrc
 
-# If upx is available, use it to compress the binaries.
-UPXPATH=$(shell which upx)
-
-# Skip upx in Mac environments: https://github.com/upx/upx/issues/446
-ifeq ($(shell uname -s),Darwin)
-  UPXPATH=
-endif
-
-# Skip upx on arch linux too.
-ifeq ($(shell grep -o 'Arch Linux' /etc/issue 2>/dev/null),Arch Linux)
-  UPXPATH=
-endif
-
 # Travis CI passes the version in. Local builds get it from the current git tag.
 ifeq ($(VERSION),)
 	include .metadata.make
@@ -41,11 +28,7 @@ RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
 # used for freebsd packages.
 BINARYU:=$(shell echo $(BINARY) | tr -- - _)
 
-PACKAGE_SCRIPTS=
-ifeq ($(FORMULA),service)
-	PACKAGE_SCRIPTS=--after-install after-install-rendered.sh \
-	--before-remove before-remove-rendered.sh
-endif
+PACKAGE_SCRIPTS=--after-install after-install-rendered.sh --before-remove before-remove-rendered.sh
 
 define PACKAGE_ARGS
 $(PACKAGE_SCRIPTS) \
@@ -105,7 +88,7 @@ signdmg: clean $(MACAPP).app
 
 # Delete all build assets.
 clean:
-	rm -f $(BINARY) $(BINARY).*.{macos,freebsd,linux,exe,upx}{,.gz,.zip} $(BINARY).1{,.gz} $(BINARY).rb
+	rm -f $(BINARY) $(BINARY).*.{macos,freebsd,linux,exe}{,.gz,.zip} $(BINARY).1{,.gz} $(BINARY).rb
 	rm -f $(BINARY){_,-}*.{deb,rpm,txz} v*.tar.gz.sha256 examples/MANUAL .metadata.make rsrc_*.syso
 	rm -f cmd/$(BINARY)/README{,.html} README{,.html} ./$(BINARY)_manual.html rsrc.syso $(MACAPP).*.app.zip
 	rm -f $(BINARY).aur.install PKGBUILD $(BINARY).service pkg/bindata/bindata.go pack.temp.dmg
@@ -149,19 +132,16 @@ $(shell go env GOPATH)/bin/rsrc:
 build: $(BINARY)
 $(BINARY): generate main.go
 	go build $(BUILD_FLAGS) -o $(BINARY) -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) "
-	[ -z "$(UPXPATH)" ] || $(UPXPATH) -q9 $@
 
 linux: $(BINARY).amd64.linux
 $(BINARY).amd64.linux: generate main.go
 	# Building linux 64-bit x86 binary.
 	GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) "
-	[ -z "$(UPXPATH)" ] || $(UPXPATH) -q9 $@
 
 linux386: $(BINARY).386.linux
 $(BINARY).386.linux: generate main.go
 	# Building linux 32-bit x86 binary.
 	GOOS=linux GOARCH=386 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) "
-	[ -z "$(UPXPATH)" ] || $(UPXPATH) -q9 $@
 
 arm: arm64 armhf
 
@@ -169,14 +149,11 @@ arm64: $(BINARY).arm64.linux
 $(BINARY).arm64.linux: generate main.go
 	# Building linux 64-bit ARM binary.
 	GOOS=linux GOARCH=arm64 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) "
-	# https://github.com/upx/upx/issues/351#issuecomment-599116973
-	# [ -z "$(UPXPATH)" ] || $(UPXPATH) -q9 $@
 
 armhf: $(BINARY).arm.linux
 $(BINARY).arm.linux: generate main.go
 	# Building linux 32-bit ARM binary.
 	GOOS=linux GOARCH=arm GOARM=6 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) "
-	[ -z "$(UPXPATH)" ] || $(UPXPATH) -q9 $@
 
 macos: $(BINARY).universal.macos
 $(BINARY).universal.macos: $(BINARY).amd64.macos $(BINARY).arm64.macos
@@ -197,7 +174,6 @@ $(BINARY).amd64.freebsd: generate main.go
 freebsd386: $(BINARY).i386.freebsd
 $(BINARY).i386.freebsd: generate main.go
 	GOOS=freebsd GOARCH=386 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) "
-	[ -z "$(UPXPATH)" ] || $(UPXPATH) -q9 $@ || true
 
 freebsdarm: $(BINARY).armhf.freebsd
 $(BINARY).armhf.freebsd: generate main.go
@@ -208,7 +184,6 @@ windows: $(BINARY).amd64.exe
 $(BINARY).amd64.exe: generate rsrc.syso main.go
 	# Building windows 64-bit x86 binary.
 	GOOS=windows GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) $(WINDOWS_LDFLAGS)"
-	[ -z "$(UPXPATH)" ] || $(UPXPATH) -q9 $@
 
 ####################
 ##### Packages #####
@@ -261,49 +236,49 @@ rpm: $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm
 $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm: package_build_linux_rpm check_fpm
 	@echo "Building 'rpm' package for $(BINARY) version '$(RPMVERSION)-$(ITERATION)'."
 	fpm -s dir -t rpm $(PACKAGE_ARGS) -a x86_64 -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm
+	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).x86_64.rpm
 
 deb: $(BINARY)_$(VERSION)-$(ITERATION)_amd64.deb
 $(BINARY)_$(VERSION)-$(ITERATION)_amd64.deb: package_build_linux_deb check_fpm
 	@echo "Building 'deb' package for $(BINARY) version '$(VERSION)-$(ITERATION)'."
 	fpm -s dir -t deb $(PACKAGE_ARGS) -a amd64 -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_amd64.deb
+	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_amd64.deb
 
 rpm386: $(BINARY)-$(RPMVERSION)-$(ITERATION).i386.rpm
 $(BINARY)-$(RPMVERSION)-$(ITERATION).i386.rpm: package_build_linux_386_rpm check_fpm
 	@echo "Building 32-bit 'rpm' package for $(BINARY) version '$(RPMVERSION)-$(ITERATION)'."
 	fpm -s dir -t rpm $(PACKAGE_ARGS) -a i386 -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).i386.rpm
+	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).i386.rpm
 
 deb386: $(BINARY)_$(VERSION)-$(ITERATION)_i386.deb
 $(BINARY)_$(VERSION)-$(ITERATION)_i386.deb: package_build_linux_386_deb check_fpm
 	@echo "Building 32-bit 'deb' package for $(BINARY) version '$(VERSION)-$(ITERATION)'."
 	fpm -s dir -t deb $(PACKAGE_ARGS) -a i386 -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_i386.deb
+	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_i386.deb
 
-rpmarm: $(BINARY)-$(RPMVERSION)-$(ITERATION).arm64.rpm
-$(BINARY)-$(RPMVERSION)-$(ITERATION).arm64.rpm: package_build_linux_arm64_rpm check_fpm
+rpmarm: $(BINARY)-$(RPMVERSION)-$(ITERATION).aarch64.rpm
+$(BINARY)-$(RPMVERSION)-$(ITERATION).aarch64.rpm: package_build_linux_arm64_rpm check_fpm
 	@echo "Building 64-bit ARM8 'rpm' package for $(BINARY) version '$(RPMVERSION)-$(ITERATION)'."
-	fpm -s dir -t rpm $(PACKAGE_ARGS) -a arm64 -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).arm64.rpm
+	fpm -s dir -t rpm $(PACKAGE_ARGS) -a aarch64 -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
+	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).aarch64.rpm
 
 debarm: $(BINARY)_$(VERSION)-$(ITERATION)_arm64.deb
 $(BINARY)_$(VERSION)-$(ITERATION)_arm64.deb: package_build_linux_arm64_deb check_fpm
 	@echo "Building 64-bit ARM8 'deb' package for $(BINARY) version '$(VERSION)-$(ITERATION)'."
 	fpm -s dir -t deb $(PACKAGE_ARGS) -a arm64 -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_arm64.deb
+	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_arm64.deb
 
 rpmarmhf: $(BINARY)-$(RPMVERSION)-$(ITERATION).armhf.rpm
 $(BINARY)-$(RPMVERSION)-$(ITERATION).armhf.rpm: package_build_linux_armhf_rpm check_fpm
 	@echo "Building 32-bit ARM6/7 HF 'rpm' package for $(BINARY) version '$(RPMVERSION)-$(ITERATION)'."
 	fpm -s dir -t rpm $(PACKAGE_ARGS) -a armhf -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).armhf.rpm
+	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign $(BINARY)-$(RPMVERSION)-$(ITERATION).armhf.rpm
 
 debarmhf: $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb
 $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb: package_build_linux_armhf_deb check_fpm
 	@echo "Building 32-bit ARM6/7 HF 'deb' package for $(BINARY) version '$(VERSION)-$(ITERATION)'."
 	fpm -s dir -t deb $(PACKAGE_ARGS) -a armhf -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
-	[ "$(SIGNING_KEY)" == "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb
+	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin $(BINARY)_$(VERSION)-$(ITERATION)_armhf.deb
 
 freebsd_pkg: $(BINARY)-$(VERSION)_$(ITERATION).amd64.txz
 $(BINARY)-$(VERSION)_$(ITERATION).amd64.txz: package_build_freebsd check_fpm
@@ -332,8 +307,8 @@ package_build_linux_rpm: readme man plugins_linux_amd64 after-install-rendered.s
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/$(CONFIG_FILE)
 	cp LICENSE *.html examples/*?.?* $@/usr/share/doc/$(BINARY)/
-	[ "$(FORMULA)" != "service" ] || mkdir -p $@/lib/systemd/system
-	[ "$(FORMULA)" != "service" ] || cp $(BINARY).service $@/lib/systemd/system/
+	 mkdir -p $@/lib/systemd/system
+	cp $(BINARY).service $@/lib/systemd/system/
 	[ ! -d "init/linux/rpm" ] || cp -r init/linux/rpm/* $@
 
 # Build an environment that can be packaged for linux.
@@ -348,13 +323,12 @@ package_build_linux_deb: readme man plugins_linux_amd64 after-install-rendered.s
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/
 	cp examples/$(CONFIG_FILE).example $@/etc/$(BINARY)/$(CONFIG_FILE)
 	cp LICENSE *.html examples/*?.?* $@/usr/share/doc/$(BINARY)/
-	[ "$(FORMULA)" != "service" ] || mkdir -p $@/lib/systemd/system
-	[ "$(FORMULA)" != "service" ] || cp $(BINARY).service $@/lib/systemd/system/
+	mkdir -p $@/lib/systemd/system
+	cp $(BINARY).service $@/lib/systemd/system/
 	[ ! -d "init/linux/deb" ] || cp -r init/linux/deb/* $@
 
 $(BINARY).service:
-	[ "$(FORMULA)" != "service" ] || \
-		sed -e "s/{{BINARY}}/$(BINARY)/g" -e "s/{{DESC}}/$(DESC)/g" \
+	sed -e "s/{{BINARY}}/$(BINARY)/g" -e "s/{{DESC}}/$(DESC)/g" \
 		init/systemd/template.unit.service > $(BINARY).service
 
 after-install-rendered.sh:
@@ -417,11 +391,10 @@ package_build_freebsd: readme man after-install-rendered.sh before-remove-render
 	cp examples/$(CONFIG_FILE).example $@/usr/local/etc/$(BINARY)/
 	cp examples/$(CONFIG_FILE).example $@/usr/local/etc/$(BINARY)/$(CONFIG_FILE)
 	cp LICENSE *.html examples/*?.?* $@/usr/local/share/doc/$(BINARY)/
-	[ "$(FORMULA)" != "service" ] || mkdir -p $@/usr/local/etc/rc.d
-	[ "$(FORMULA)" != "service" ] || \
-			sed -e "s/{{BINARY}}/$(BINARY)/g" -e "s/{{BINARYU}}/$(BINARYU)/g" -e "s/{{CONFIG_FILE}}/$(CONFIG_FILE)/g" \
+	mkdir -p $@/usr/local/etc/rc.d
+	sed -e "s/{{BINARY}}/$(BINARY)/g" -e "s/{{BINARYU}}/$(BINARYU)/g" -e "s/{{CONFIG_FILE}}/$(CONFIG_FILE)/g" \
 			init/bsd/freebsd.rc.d > $@/usr/local/etc/rc.d/$(BINARY)
-	[ "$(FORMULA)" != "service" ] || chmod +x $@/usr/local/etc/rc.d/$(BINARY)
+	chmod +x $@/usr/local/etc/rc.d/$(BINARY)
 
 package_build_freebsd_386: package_build_freebsd freebsd386
 	mkdir -p $@
@@ -511,7 +484,7 @@ formula: $(BINARY).rb
 v$(VERSION).tar.gz.sha256:
 	# Calculate the SHA from the Github source file.
 	curl -sL $(SOURCE_URL)/archive/v$(VERSION).tar.gz | openssl dgst -r -sha256 | tee $@
-$(BINARY).rb: v$(VERSION).tar.gz.sha256 init/homebrew/$(FORMULA).rb.tmpl
+$(BINARY).rb: v$(VERSION).tar.gz.sha256 init/homebrew/service.rb.tmpl
 	# Creating formula from template using sed.
 	sed -e "s/{{Version}}/$(VERSION)/g" \
 		-e "s/{{Iter}}/$(ITERATION)/g" \
@@ -521,7 +494,7 @@ $(BINARY).rb: v$(VERSION).tar.gz.sha256 init/homebrew/$(FORMULA).rb.tmpl
 		-e "s%{{SOURCE_PATH}}%$(SOURCE_PATH)%g" \
 		-e "s%{{CONFIG_FILE}}%$(CONFIG_FILE)%g" \
 		-e "s%{{Class}}%$(shell echo $(BINARY) | perl -pe 's/(?:\b|-)(\p{Ll})/\u$$1/g')%g" \
-		init/homebrew/$(FORMULA).rb.tmpl | tee $(BINARY).rb
+		init/homebrew/service.rb.tmpl | tee $(BINARY).rb
 		# That perl line turns hello-world into HelloWorld, etc.
 
 # Used for Homebrew only. Other distros can create packages.
