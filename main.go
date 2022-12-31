@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"golift.io/badgedata"
 	_ "golift.io/badgedata/grafana"
@@ -77,7 +78,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := http.ListenAndServe(flags.ListenAddr, nil); err != nil {
+	server := &http.Server{
+		Addr:              flags.ListenAddr,
+		ReadHeaderTimeout: 15 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
