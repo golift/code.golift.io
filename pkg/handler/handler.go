@@ -140,7 +140,7 @@ func (p *PathConfig) setRepoCacheControl(globalCC *uint64) {
 
 // setRepoVCS makes sure the provides VCS type is supported,
 // or sets it automatically based on the repo's prefix.
-func (p *PathConfig) setRepoVCS() (err error) {
+func (p *PathConfig) setRepoVCS() error {
 	// Check and set VCS type.
 	switch {
 	case p.Repo == "" && p.Redir != "":
@@ -148,6 +148,7 @@ func (p *PathConfig) setRepoVCS() (err error) {
 	case p.VCS == "github" || p.VCS == "gitlab" || p.VCS == "bitbucket":
 		p.VCS = "git"
 	case p.VCS == "":
+		var err error
 		// Try to figure it out.
 		p.VCS, err = findRepoVCS(p.Repo)
 

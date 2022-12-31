@@ -17,7 +17,7 @@ package handler_test
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sort"
@@ -227,7 +227,7 @@ func TestHandler(t *testing.T) {
 			continue
 		}
 
-		data, err := ioutil.ReadAll(resp.Body)
+		data, err := io.ReadAll(resp.Body)
 
 		resp.Body.Close()
 		s.Close()
@@ -237,7 +237,7 @@ func TestHandler(t *testing.T) {
 		}
 
 		if err != nil {
-			t.Errorf("%s: ioutil.ReadAll: %v", test.name, err)
+			t.Errorf("%s: io.ReadAll: %v", test.name, err)
 			continue
 		}
 

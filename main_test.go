@@ -1,7 +1,7 @@
 package main_test
 
 import (
-	"io/ioutil"
+	"os"
 	"syscall"
 	"testing"
 
@@ -66,7 +66,7 @@ func TestParseConfig(t *testing.T) {
 	}}
 
 	for _, test := range tests {
-		f, err := ioutil.TempFile("", "*.conf")
+		f, err := os.CreateTemp("", "*.conf")
 		if err != nil {
 			t.Errorf("writing test temporary file failed\n%s", err)
 		}
@@ -79,7 +79,7 @@ func TestParseConfig(t *testing.T) {
 			}
 		}()
 
-		_ = ioutil.WriteFile(f.Name(), []byte(test.config), 0o600)
+		_ = os.WriteFile(f.Name(), []byte(test.config), 0o600)
 		c := &main.Config{}
 
 		err = c.ParseConfig(f.Name())
