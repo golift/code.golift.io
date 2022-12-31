@@ -5,12 +5,6 @@
 # Suck in our application information.
 IGNORED:=$(shell bash -c "source settings.sh ; env | grep -v BASH_FUNC | sed 's/=/:=/;s/^/export /' > .metadata.make")
 
-# md2roff turns markdown into man files and html files.
-MD2ROFF_BIN=github.com/davidnewhall/md2roff@v0.0.1
-
-# rsrc adds an ico file to a Windows exe file.
-RSRC_BIN=github.com/akavel/rsrc
-
 # Travis CI passes the version in. Local builds get it from the current git tag.
 ifeq ($(VERSION),)
 	include .metadata.make
@@ -103,27 +97,21 @@ clean:
 # This also turns the repo readme into an html file.
 # md2roff is needed to build the man file and html pages from the READMEs.
 man: $(BINARY).1.gz
-$(BINARY).1.gz: md2roff
+$(BINARY).1.gz:
 	# Building man page. Build dependency first: md2roff
 	$(shell go env GOPATH)/bin/md2roff --manual $(BINARY) --version $(VERSION) --date "$(DATE)" examples/MANUAL.md
 	gzip -9nc examples/MANUAL > $@
 	mv examples/MANUAL.html $(BINARY)_manual.html
 
-md2roff: $(shell go env GOPATH)/bin/md2roff
-$(shell go env GOPATH)/bin/md2roff:
-	cd /tmp ; go get $(MD2ROFF_BIN) ; go install $(MD2ROFF_BIN)
-
 # TODO: provide a template that adds the date to the built html file.
 readme: README.html
-README.html: md2roff
+README.html:
 	# This turns README.md into README.html
 	$(shell go env GOPATH)/bin/md2roff --manual $(BINARY) --version $(VERSION) --date "$(DATE)" README.md
 
 rsrc: rsrc.syso
-rsrc.syso: init/windows/application.ico init/windows/manifest.xml $(shell go env GOPATH)/bin/rsrc
+rsrc.syso: init/windows/application.ico init/windows/manifest.xml
 	$(shell go env GOPATH)/bin/rsrc -arch amd64 -ico init/windows/application.ico -manifest init/windows/manifest.xml
-$(shell go env GOPATH)/bin/rsrc:
-	cd /tmp ; go get $(RSRC_BIN) ; go install $(RSRC_BIN)
 
 ####################
 ##### Binaries #####
@@ -437,22 +425,9 @@ lint: generate
 	GOOS=freebsd $(shell go env GOPATH)/bin/golangci-lint run
 	#GOOS=windows $(shell go env GOPATH)/bin/golangci-lint run
 
-# Mockgen and bindata are examples.
-# Your `go generate` may require other tools; add them!
 
-mockgen: $(shell go env GOPATH)/bin/mockgen
-$(shell go env GOPATH)/bin/mockgen:
-	cd /tmp ; go install github.com/golang/mock/mockgen@latest
-
-bindata: $(shell go env GOPATH)/bin/go-bindata
-$(shell go env GOPATH)/bin/go-bindata:
-	cd /tmp ; go install github.com/kevinburke/go-bindata/...@latest
-
-#generate: bindata pkg/bindata/bindata.go
 generate: # nothing..
-pkg/bindata/bindata.go: pkg/bindata/templates/* pkg/bindata/files/* pkg/bindata/files/*/* pkg/bindata/files/*/*/* pkg/bindata/files/*/*/*/*
-	find pkg -name .DS\* -delete
-	go generate ./...
+
 
 ##################
 ##### Docker #####
