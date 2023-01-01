@@ -1,0 +1,21 @@
+pkgbase = turbovanityurls
+	pkgdesc = {{Desc}}
+	pkgver = {{VERSION}}
+	pkgrel = {{Iter}}
+	url = {{SOURCE_URL}}
+	install = turbovanityurls.aur.install
+	arch = x86_64
+	arch = arm
+	arch = armv6h
+	arch = armv7h
+	arch = aarch64
+	arch = i686
+	arch = pentium4
+	license = MIT
+	makedepends = go
+	makedepends = make
+	backup = etc/turbovanityurls/config.yaml
+	source = turbovanityurls-{{VERSION}}.tar.gz::{{SOURCE_PATH}}
+	sha256sums = {{SHA256}}
+
+pkgname = turbovanityurls

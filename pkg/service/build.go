@@ -1,7 +1,6 @@
-//go:build linux
-// +build linux
+//go:build !windows && !darwin && !freebsd
 
-package main
+package service
 
 // DefaultConfFile is where to find config if -c is not provided.
 const DefaultConfFile = `/etc/turbovanityurls/config.yaml`

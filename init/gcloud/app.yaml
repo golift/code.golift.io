@@ -1,5 +1,7 @@
 runtime: go115
 
+# This file is an example for google app engine, but this application runs on anything.
+
 handlers:
 - url: /(.*\.(sh))$
   static_files: static/\1

@@ -10,7 +10,8 @@ FROM golang:1-buster as builder
 WORKDIR /src
 COPY go.mod go.sum .
 RUN go mod download
-COPY . .
+COPY main.go .
+COPY pkg pkg
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -34,8 +35,8 @@ ARG TARGETARCH
 ARG BUILD_DATE
 ARG COMMIT
 ARG VERSION
-ARG LICENSE=MIT
-ARG SOURCE_URL=http://github.com/golift/application-builder
+ARG LICENSE=Apache-2
+ARG SOURCE_URL=http://github.com/golift/turbovanityurls
 ARG DESC=application-builder
 ARG VENDOR=golift
 ARG AUTHOR=golift

@@ -2,12 +2,12 @@
 # This is part of Application Builder.
 # https://github.com/golift/application-builder
 # This file is used when FORMULA is set to 'service'.
-class {{Class}} < Formula
+class TurboVanityURLs < Formula
   desc "{{Desc}}"
-  homepage "{{URL}}"
+  homepage "https://golift.io/turbovanityurls"
   url "{{SOURCE_PATH}}"
   sha256 "{{SHA256}}"
-  head "{{URL}}"
+  head "{{SOURCE_URL}}"
 
   depends_on "go" => :build
 
@@ -26,7 +26,7 @@ class {{Class}} < Formula
 
   def caveats
     <<-EOS
-  Edit the config file at #{etc}/#{name}/{{CONFIG_FILE}} then start #{name} with
+  Edit the config file at #{etc}/#{name}/config.yaml then start #{name} with
   brew services start #{name} ~ log file: #{var}/log/#{name}.log
   The manual explains the config file options: man #{name}
     EOS
@@ -46,7 +46,7 @@ class {{Class}} < Formula
          <array>
              <string>#{bin}/#{name}</string>
              <string>--config</string>
-             <string>#{etc}/#{name}/{{CONFIG_FILE}}</string>
+             <string>#{etc}/#{name}/config.yaml</string>
          </array>
          <key>RunAtLoad</key>
          <true/>

@@ -1,18 +1,18 @@
-package main_test
+package service_test
 
 import (
 	"os"
 	"syscall"
 	"testing"
 
-	main "golift.io/turbovanityurls"
+	"golift.io/turbovanityurls/pkg/service"
 )
 
 func TestParseFlags(t *testing.T) {
 	t.Parallel()
 
 	test := []string{"-l", "127.0.0.1:456", "-c", "config.file", "-v"}
-	flags := main.ParseFlags(test)
+	flags := service.ParseFlags(test)
 
 	if flags.ListenAddr != test[1] {
 		t.Errorf("test flag was not parsed properly: %v", flags.ListenAddr)
@@ -26,13 +26,13 @@ func TestParseFlags(t *testing.T) {
 		t.Errorf("test flag was not parsed properly: ShowVer=%v", flags.ShowVer)
 	}
 
-	flags = main.ParseFlags([]string{})
+	flags = service.ParseFlags([]string{})
 
 	if flags.ListenAddr != ":8080" {
 		t.Errorf("default flag value not correct: %v", flags.ListenAddr)
 	}
 
-	if flags.ConfigPath != main.DefaultConfFile {
+	if flags.ConfigPath != service.DefaultConfFile {
 		t.Errorf("default flag value not correct: %v", flags.ConfigPath)
 	}
 }
@@ -80,7 +80,7 @@ func TestParseConfig(t *testing.T) {
 		}()
 
 		_ = os.WriteFile(f.Name(), []byte(test.config), 0o600)
-		c := &main.Config{}
+		c := &service.Config{}
 
 		err = c.ParseConfig(f.Name())
 		if err != nil {
@@ -96,7 +96,7 @@ func TestParseConfig(t *testing.T) {
 		}
 	}
 
-	c := &main.Config{}
+	c := &service.Config{}
 
 	err := c.ParseConfig("missing_file_here.asahsahsahsahs")
 	if err == nil {
