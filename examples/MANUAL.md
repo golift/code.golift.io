@@ -19,6 +19,10 @@ OPTIONS
         Provide a listen address to bind to. Default is :$PORT. PORT is taken
         from the environment. If PORT is unset the default is :8080.
 
+    -t <timeout>
+        May pass a web request timeout in Go Duration format. Default is 15 seconds.
+        Example: -t 1m30s
+
     -v
         Display version and exit.
 
@@ -117,7 +121,7 @@ CONFIGURATION
 AUTHOR
 ---
 *   GoogleCloudPlatform - 2017-2018
-*   David Newhall II    - 2019
+*   David Newhall II    - 2019-2023
 
 LOCATION
 ---
