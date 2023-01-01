@@ -1,31 +1,30 @@
-# This Makefile is written as generic as possible.
-# Setting the variables in settings.sh and creating the paths in the repo makes this work.
-# See more: https://github.com/golift/application-builder
+# This is the same logic found in settings.sh.
+DATE="$(shell date -u +%Y-%m-%dT%H:%M:00Z)"
+COMMIT="$(shell git rev-parse --short HEAD 2>/dev/null || echo 0)"
+BRANCH="$(shell git rev-parse --abbrev-ref HEAD 2>/dev/null || echo ${GITHUB_REF_NAME})"
+MAINT=David Newhall II <captain at golift dot io>
+DESC=HTTP Server providing vanity go import paths.
+LICENSE=Apache-2.0
+SOURCE_URL=https://github.com/golift/turbovanityurls
+VENDOR=Go Lift <code@golift.io>
 
-# Suck in our application information.
-IGNORED:=$(shell bash -c "source settings.sh ; env | grep -v BASH_FUNC | sed 's/=/:=/;s/^/export /' > .metadata.make")
-
-# Travis CI passes the version in. Local builds get it from the current git tag.
+# Some builds pass the version in. Local builds get it from the current git tag.
 ifeq ($(VERSION),)
-	include .metadata.make
-else
-	# Preserve the passed-in version & iteration (homebrew).
-	_VERSION:=$(VERSION)
-	_ITERATION:=$(ITERATION)
-	include .metadata.make
-	VERSION:=$(_VERSION)
-	ITERATION:=$(_ITERATION)
+	VERSION=$(shell git describe --abbrev=0 --tags $(shell git rev-list --tags --max-count=1) | tr -d v)
+endif
+ifeq ($(VERSION),)
+	VERSION=development
+endif
+ifeq ($(ITERATION),)
+	ITERATION=$(shell git rev-list --count --all 2>/dev/null || echo 0)
 endif
 
-# rpm is wierd and changes - to _ in versions.
-RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
-# used for freebsd packages.
-BINARYU:=$(shell echo turbovanityurls | tr -- - _)
-
-PACKAGE_SCRIPTS=--after-install init/systemd/after-install.sh --before-remove init/systemd/before-remove.sh
+# If you put a signing key into GPG, set it here.
+SIGNING_KEY=$(shell gpg --list-keys 2>/dev/null | grep -o B93DD66EF98E54E2EAE025BA0166AD34ABC5A57C)
 
 define PACKAGE_ARGS
-$(PACKAGE_SCRIPTS) \
+--after-install init/systemd/after-install.sh \
+--before-remove init/systemd/before-remove.sh \
 --name turbovanityurls \
 --deb-no-default-config-files \
 --rpm-os linux \
@@ -42,7 +41,8 @@ $(PACKAGE_SCRIPTS) \
 --freebsd-origin "$(SOURCE_URL)"
 endef
 
-PLUGINS:=$(patsubst plugins/%/main.go,%,$(wildcard plugins/*/main.go))
+# rpm is wierd and changes - to _ in versions.
+RPMVERSION:=$(shell echo $(VERSION) | tr -- - _)
 
 VERSION_LDFLAGS:= -X \"main.Branch=$(BRANCH) ($(COMMIT))\" \
 	-X \"main.BuildDate=$(DATE)\" \
@@ -52,6 +52,7 @@ VERSION_LDFLAGS:= -X \"main.Branch=$(BRANCH) ($(COMMIT))\" \
 
 # Makefile targets follow.
 
+.PHONY: all clean build release man readme rsrc
 all: clean build
 
 ####################
@@ -105,6 +106,7 @@ rsrc.syso: init/windows/application.ico init/windows/manifest.xml
 ##### Binaries #####
 ####################
 
+.PHONY: build linux linux386 arm arm64 armhf macos freebsd freebsd386 freebsdarm exe windows
 build: turbovanityurls
 turbovanityurls: main.go
 	go build $(BUILD_FLAGS) -o turbovanityurls -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) "
@@ -159,12 +161,13 @@ exe: turbovanityurls.amd64.exe
 windows: turbovanityurls.amd64.exe
 turbovanityurls.amd64.exe: rsrc.syso main.go
 	# Building windows 64-bit x86 binary.
-	GOOS=windows GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS) $(WINDOWS_LDFLAGS)"
+	GOOS=windows GOARCH=amd64 go build $(BUILD_FLAGS) -o $@ -ldflags "-w -s $(VERSION_LDFLAGS) $(EXTRA_LDFLAGS)"
 
 ####################
 ##### Packages #####
 ####################
 
+.PHONY: linux_packages freebsd_packages rpm deb rpm386 deb386 rpmarm debarm rpmarmhf debarmhf freebsd_pkg freebsd386_pkg freebsdarm_pkg
 linux_packages: rpm deb rpm386 deb386 debarm rpmarm debarmhf rpmarmhf
 
 freebsd_packages: freebsd_pkg freebsd386_pkg freebsdarm_pkg
@@ -172,68 +175,68 @@ freebsd_packages: freebsd_pkg freebsd386_pkg freebsdarm_pkg
 rpm: turbovanityurls-$(RPMVERSION)-$(ITERATION).x86_64.rpm
 turbovanityurls-$(RPMVERSION)-$(ITERATION).x86_64.rpm: package_build_linux_rpm check_fpm
 	@echo "Building 'rpm' package for turbovanityurls version '$(RPMVERSION)-$(ITERATION)'."
-	fpm -s dir -t rpm $(PACKAGE_ARGS) -a x86_64 -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t rpm $(PACKAGE_ARGS) -a x86_64 -v $(RPMVERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign turbovanityurls-$(RPMVERSION)-$(ITERATION).x86_64.rpm
 
 deb: turbovanityurls_$(VERSION)-$(ITERATION)_amd64.deb
 turbovanityurls_$(VERSION)-$(ITERATION)_amd64.deb: package_build_linux_deb check_fpm
 	@echo "Building 'deb' package for turbovanityurls version '$(VERSION)-$(ITERATION)'."
-	fpm -s dir -t deb $(PACKAGE_ARGS) -a amd64 -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t deb $(PACKAGE_ARGS) -a amd64 -v $(VERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin turbovanityurls_$(VERSION)-$(ITERATION)_amd64.deb
 
 rpm386: turbovanityurls-$(RPMVERSION)-$(ITERATION).i386.rpm
 turbovanityurls-$(RPMVERSION)-$(ITERATION).i386.rpm: package_build_linux_386_rpm check_fpm
 	@echo "Building 32-bit 'rpm' package for turbovanityurls version '$(RPMVERSION)-$(ITERATION)'."
-	fpm -s dir -t rpm $(PACKAGE_ARGS) -a i386 -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t rpm $(PACKAGE_ARGS) -a i386 -v $(RPMVERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign turbovanityurls-$(RPMVERSION)-$(ITERATION).i386.rpm
 
 deb386: turbovanityurls_$(VERSION)-$(ITERATION)_i386.deb
 turbovanityurls_$(VERSION)-$(ITERATION)_i386.deb: package_build_linux_386_deb check_fpm
 	@echo "Building 32-bit 'deb' package for turbovanityurls version '$(VERSION)-$(ITERATION)'."
-	fpm -s dir -t deb $(PACKAGE_ARGS) -a i386 -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t deb $(PACKAGE_ARGS) -a i386 -v $(VERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin turbovanityurls_$(VERSION)-$(ITERATION)_i386.deb
 
 rpmarm: turbovanityurls-$(RPMVERSION)-$(ITERATION).aarch64.rpm
 turbovanityurls-$(RPMVERSION)-$(ITERATION).aarch64.rpm: package_build_linux_arm64_rpm check_fpm
 	@echo "Building 64-bit ARM8 'rpm' package for turbovanityurls version '$(RPMVERSION)-$(ITERATION)'."
-	fpm -s dir -t rpm $(PACKAGE_ARGS) -a aarch64 -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t rpm $(PACKAGE_ARGS) -a aarch64 -v $(RPMVERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign turbovanityurls-$(RPMVERSION)-$(ITERATION).aarch64.rpm
 
 debarm: turbovanityurls_$(VERSION)-$(ITERATION)_arm64.deb
 turbovanityurls_$(VERSION)-$(ITERATION)_arm64.deb: package_build_linux_arm64_deb check_fpm
 	@echo "Building 64-bit ARM8 'deb' package for turbovanityurls version '$(VERSION)-$(ITERATION)'."
-	fpm -s dir -t deb $(PACKAGE_ARGS) -a arm64 -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t deb $(PACKAGE_ARGS) -a arm64 -v $(VERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin turbovanityurls_$(VERSION)-$(ITERATION)_arm64.deb
 
 rpmarmhf: turbovanityurls-$(RPMVERSION)-$(ITERATION).armhf.rpm
 turbovanityurls-$(RPMVERSION)-$(ITERATION).armhf.rpm: package_build_linux_armhf_rpm check_fpm
 	@echo "Building 32-bit ARM6/7 HF 'rpm' package for turbovanityurls version '$(RPMVERSION)-$(ITERATION)'."
-	fpm -s dir -t rpm $(PACKAGE_ARGS) -a armhf -v $(RPMVERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t rpm $(PACKAGE_ARGS) -a armhf -v $(RPMVERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || rpmsign --key-id=$(SIGNING_KEY) --resign turbovanityurls-$(RPMVERSION)-$(ITERATION).armhf.rpm
 
 debarmhf: turbovanityurls_$(VERSION)-$(ITERATION)_armhf.deb
 turbovanityurls_$(VERSION)-$(ITERATION)_armhf.deb: package_build_linux_armhf_deb check_fpm
 	@echo "Building 32-bit ARM6/7 HF 'deb' package for turbovanityurls version '$(VERSION)-$(ITERATION)'."
-	fpm -s dir -t deb $(PACKAGE_ARGS) -a armhf -v $(VERSION) -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t deb $(PACKAGE_ARGS) -a armhf -v $(VERSION) -C $<
 	[ "$(SIGNING_KEY)" = "" ] || debsigs --default-key="$(SIGNING_KEY)" --sign=origin turbovanityurls_$(VERSION)-$(ITERATION)_armhf.deb
 
 freebsd_pkg: turbovanityurls-$(VERSION)_$(ITERATION).amd64.txz
 turbovanityurls-$(VERSION)_$(ITERATION).amd64.txz: package_build_freebsd check_fpm
 	@echo "Building 'freebsd pkg' package for turbovanityurls version '$(VERSION)-$(ITERATION)'."
-	fpm -s dir -t freebsd $(PACKAGE_ARGS) -a amd64 -v $(VERSION) -p turbovanityurls-$(VERSION)_$(ITERATION).amd64.txz -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t freebsd $(PACKAGE_ARGS) -a amd64 -v $(VERSION) -p turbovanityurls-$(VERSION)_$(ITERATION).amd64.txz -C $<
 
 freebsd386_pkg: turbovanityurls-$(VERSION)_$(ITERATION).i386.txz
 turbovanityurls-$(VERSION)_$(ITERATION).i386.txz: package_build_freebsd_386 check_fpm
 	@echo "Building 32-bit 'freebsd pkg' package for turbovanityurls version '$(VERSION)-$(ITERATION)'."
-	fpm -s dir -t freebsd $(PACKAGE_ARGS) -a 386 -v $(VERSION) -p turbovanityurls-$(VERSION)_$(ITERATION).i386.txz -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t freebsd $(PACKAGE_ARGS) -a 386 -v $(VERSION) -p turbovanityurls-$(VERSION)_$(ITERATION).i386.txz -C $<
 
 freebsdarm_pkg: turbovanityurls-$(VERSION)_$(ITERATION).armhf.txz
 turbovanityurls-$(VERSION)_$(ITERATION).armhf.txz: package_build_freebsd_arm check_fpm
 	@echo "Building 32-bit ARM6/7 HF 'freebsd pkg' package for turbovanityurls version '$(VERSION)-$(ITERATION)'."
-	fpm -s dir -t freebsd $(PACKAGE_ARGS) -a arm -v $(VERSION) -p turbovanityurls-$(VERSION)_$(ITERATION).armhf.txz -C $< $(EXTRA_FPM_FLAGS)
+	fpm -s dir -t freebsd $(PACKAGE_ARGS) -a arm -v $(VERSION) -p turbovanityurls-$(VERSION)_$(ITERATION).armhf.txz -C $<
 
 # Build an environment that can be packaged for linux.
-package_build_linux_rpm: readme man plugins_linux_amd64 linux
+package_build_linux_rpm: readme man linux
 	# Building package environment for linux.
 	mkdir -p $@/usr/bin $@/etc/turbovanityurls $@/usr/share/man/man1 $@/usr/share/doc/turbovanityurls $@/usr/lib/turbovanityurls $@/var/log/turbovanityurls
 	# Copying the binary, config file, unit file, and man page into the env.
@@ -249,7 +252,7 @@ package_build_linux_rpm: readme man plugins_linux_amd64 linux
 	[ ! -d "init/linux/rpm" ] || cp -r init/linux/rpm/* $@
 
 # Build an environment that can be packaged for linux.
-package_build_linux_deb: readme man plugins_linux_amd64 linux
+package_build_linux_deb: readme man linux
 	# Building package environment for linux.
 	mkdir -p $@/usr/bin $@/etc/turbovanityurls $@/usr/share/man/man1 $@/usr/share/doc/turbovanityurls $@/usr/lib/turbovanityurls $@/var/log/turbovanityurls
 	# Copying the binary, config file, unit file, and man page into the env.
@@ -321,25 +324,10 @@ package_build_freebsd_arm: package_build_freebsd freebsdarm
 	cp -r $</* $@/
 	cp turbovanityurls.armhf.freebsd $@/usr/local/bin/turbovanityurls
 
+.PHONY: check_fpm test lint docker install
+
 check_fpm:
 	@fpm --version > /dev/null || (echo "FPM missing. Install FPM: https://fpm.readthedocs.io/en/latest/installing.html" && false)
-
-##################
-##### Extras #####
-##################
-
-plugins: $(patsubst %,%.so,$(PLUGINS))
-$(patsubst %,%.so,$(PLUGINS)):
-	go build -o $@ -ldflags "$(VERSION_LDFLAGS)" -buildmode=plugin ./plugins/$(patsubst %.so,%,$@)
-
-linux_plugins: plugins_linux_amd64 plugins_linux_i386 plugins_linux_arm64 plugins_linux_armhf
-plugins_linux_amd64: $(patsubst %,%.linux_amd64.so,$(PLUGINS))
-$(patsubst %,%.linux_amd64.so,$(PLUGINS)):
-	GOOS=linux GOARCH=amd64 go build -o $@ -ldflags "$(VERSION_LDFLAGS)" -buildmode=plugin ./plugins/$(patsubst %.linux_amd64.so,%,$@)
-
-plugins_darwin: $(patsubst %,%.darwin.so,$(PLUGINS))
-$(patsubst %,%.darwin.so,$(PLUGINS)):
-	GOOS=darwin go build -o $@ -ldflags "$(VERSION_LDFLAGS)" -buildmode=plugin ./plugins/$(patsubst %.darwin.so,%,$@)
 
 # Run code tests and lint.
 test: lint
@@ -350,7 +338,6 @@ lint:
 	$(shell go env GOPATH)/bin/golangci-lint version
 	GOOS=linux $(shell go env GOPATH)/bin/golangci-lint run
 	GOOS=freebsd $(shell go env GOPATH)/bin/golangci-lint run
-	#GOOS=windows $(shell go env GOPATH)/bin/golangci-lint run
 
 ##################
 ##### Docker #####
@@ -371,7 +358,7 @@ docker:
 		--file init/docker/Dockerfile .
 
 # Used for Homebrew only. Other distros can create packages.
-install: man readme turbovanityurls plugins_darwin
+install: man readme turbovanityurls
 	@echo -  Done Building  -
 	@echo -  Local installation with the Makefile is only supported on macOS.
 	@echo -  Otherwise, build and install a package: make rpm -or- make deb
