@@ -69,24 +69,13 @@ release: clean linux_packages freebsd_packages windows
 	# Generating File Hashes
 	openssl dgst -r -sha256 $@/* | sed 's#release/##' | tee $@/checksums.sha256.txt
 
-# DMG only makes a DMG file if MACAPP is set. Otherwise, it makes a gzipped binary for macOS.
-dmg: clean $(MACAPP).app
-	mkdir -p release
-	[ "$(MACAPP)" = "" ] || hdiutil create release/$(MACAPP)-unsigned.dmg -srcfolder $(MACAPP).app -ov
-	[ "$(MACAPP)" != "" ] || mv turbovanityurls.*.macos release/
-	[ "$(MACAPP)" != "" ] || gzip -9r release/
-	openssl dgst -r -sha256 release/* | sed 's#release/##' | tee release/macos_checksum.sha256.txt
-
-signdmg: clean $(MACAPP).app
-	bash scripts/makedmg.sh
-
 # Delete all build assets.
 clean:
 	rm -f turbovanityurls turbovanityurls.*.{macos,freebsd,linux,exe}{,.gz,.zip} turbovanityurls.1{,.gz} turbovanityurls.rb
 	rm -f turbovanityurls{_,-}*.{deb,rpm,txz} v*.tar.gz.sha256 examples/MANUAL .metadata.make rsrc_*.syso
-	rm -f cmd/turbovanityurls/README{,.html} README{,.html} ./turbovanityurls_manual.html rsrc.syso $(MACAPP).*.app.zip
-	rm -f turbovanityurls.aur.install PKGBUILD pkg/bindata/bindata.go pack.temp.dmg
-	rm -rf aur package_build_* release $(MACAPP).*.app $(MACAPP).app
+	rm -f cmd/turbovanityurls/README{,.html} README{,.html} ./turbovanityurls_manual.html rsrc.syso
+	rm -f pkg/bindata/bindata.go
+	rm -rf package_build_* release
 
 ####################
 ##### Sidecars #####
@@ -179,34 +168,6 @@ turbovanityurls.amd64.exe: rsrc.syso main.go
 linux_packages: rpm deb rpm386 deb386 debarm rpmarm debarmhf rpmarmhf
 
 freebsd_packages: freebsd_pkg freebsd386_pkg freebsdarm_pkg
-
-aur: PKGBUILD SRCINFO turbovanityurls.aur.install
-	mkdir -p $@
-	mv PKGBUILD turbovanityurls.aur.install $@/
-	mv SRCINFO $@/.SRCINFO
-
-PKGBUILD: v$(VERSION).tar.gz.sha256
-	@echo "Creating 'aur' PKGBUILD file for turbovanityurls version '$(RPMVERSION)-$(ITERATION)'."
-	sed -e "s/{{VERSION}}/$(VERSION)/g" \
-		-e "s/{{Iter}}/$(ITERATION)/g" \
-		-e "s/{{SHA256}}/$(shell head -c64 $<)/g" \
-		-e "s/{{Desc}}/$(DESC)/g" \
-		-e "s%{{BINARY}}%turbovanityurls%g" \
-		-e "s%{{SOURCE_URL}}%$(SOURCE_URL)%g" \
-		-e "s%{{SOURCE_PATH}}%$(SOURCE_PATH)%g" \
-		-e "s%{{CONFIG_FILE}}%config.yaml%g" \
-		init/archlinux/PKGBUILD.template | tee PKGBUILD
-
-SRCINFO: v$(VERSION).tar.gz.sha256
-	sed -e "s/{{VERSION}}/$(VERSION)/g" \
-		-e "s/{{Iter}}/$(ITERATION)/g" \
-		-e "s/{{SHA256}}/$(shell head -c64 $<)/g" \
-		-e "s/{{Desc}}/$(DESC)/g" \
-		-e "s%{{BINARY}}%turbovanityurls%g" \
-		-e "s%{{SOURCE_URL}}%$(SOURCE_URL)%g" \
-		-e "s%{{SOURCE_PATH}}%$(SOURCE_PATH)%g" \
-		-e "s%{{CONFIG_FILE}}%config.yaml%g" \
-		init/archlinux/SRCINFO.template | tee SRCINFO
 
 rpm: turbovanityurls-$(RPMVERSION)-$(ITERATION).x86_64.rpm
 turbovanityurls-$(RPMVERSION)-$(ITERATION).x86_64.rpm: package_build_linux_rpm check_fpm
@@ -302,17 +263,6 @@ package_build_linux_deb: readme man plugins_linux_amd64 linux
 	mkdir -p $@/lib/systemd/system
 	cp init/systemd/turbovanityurls.service $@/lib/systemd/system/
 	[ ! -d "init/linux/deb" ] || cp -r init/linux/deb/* $@
-
-# This is used for arch linux
-turbovanityurls.aur.install:
-	echo "post_upgrade() {" >> $@
-	echo "  /bin/systemctl restart turbovanityurls" >> $@
-	echo "}" >> $@
-	echo "" >> $@
-	echo "pre_remove() {" >> $@
-	echo "  /bin/systemctl stop turbovanityurls" >> $@
-	echo "  /bin/systemctl disable turbovanityurls" >> $@
-	echo "}" >> $@
 
 package_build_linux_386_deb: package_build_linux_deb linux386
 	mkdir -p $@
@@ -416,34 +366,9 @@ docker:
 		--build-arg "VENDOR=$(VENDOR)" \
 		--build-arg "AUTHOR=$(MAINT)" \
 		--build-arg "BINARY=turbovanityurls" \
-		--build-arg "SOURCE_URL=$(SOURCE_URL)" \
 		--build-arg "CONFIG_FILE=config.yaml" \
 		--build-arg "BUILD_FLAGS=$(BUILD_FLAGS)" \
 		--file init/docker/Dockerfile .
-
-####################
-##### Homebrew #####
-####################
-
-# This builds a Homebrew formula file that can be used to install this app from source.
-# The source used comes from the released version on GitHub. This will not work with local source.
-# This target is used by Travis CI to update the released Forumla when a new tag is created.
-formula: turbovanityurls.rb
-v$(VERSION).tar.gz.sha256:
-	# Calculate the SHA from the Github source file.
-	curl -sL $(SOURCE_URL)/archive/v$(VERSION).tar.gz | openssl dgst -r -sha256 | tee $@
-turbovanityurls.rb: v$(VERSION).tar.gz.sha256 init/homebrew/service.rb.tmpl
-	# Creating formula from template using sed.
-	sed -e "s/{{Version}}/$(VERSION)/g" \
-		-e "s/{{Iter}}/$(ITERATION)/g" \
-		-e "s/{{SHA256}}/$(shell head -c64 $<)/g" \
-		-e "s/{{Desc}}/$(DESC)/g" \
-		-e "s%{{SOURCE_URL}}%$(SOURCE_URL)%g" \
-		-e "s%{{SOURCE_PATH}}%$(SOURCE_PATH)%g" \
-		-e "s%{{CONFIG_FILE}}%config.yaml%g" \
-		-e "s%{{Class}}%$(shell echo turbovanityurls | perl -pe 's/(?:\b|-)(\p{Ll})/\u$$1/g')%g" \
-		init/homebrew/service.rb.tmpl | tee turbovanityurls.rb
-		# That perl line turns hello-world into HelloWorld, etc.
 
 # Used for Homebrew only. Other distros can create packages.
 install: man readme turbovanityurls plugins_darwin
