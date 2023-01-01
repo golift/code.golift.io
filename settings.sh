@@ -20,15 +20,8 @@ GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD || echo unknown)"
 BRANCH="${GIT_BRANCH:-${GITHUB_REF_NAME}}"
 export DATE VERSION ITERATION COMMIT BRANCH
 
-
-
-# Used for source links and wiki links.
-
-# Used by homebrew downloads.
-SOURCE_PATH=https://codeload.github.com/${REPO}/tar.gz/v${VERSION}
-
 export GHUSER MAINT DESC CONFIG_FILE
-export LICENSE FORMULA SOURCE_URL VERSION_PATH SOURCE_PATH
+export LICENSE FORMULA SOURCE_URL SOURCE_PATH
 
 ### Optional ###
 
