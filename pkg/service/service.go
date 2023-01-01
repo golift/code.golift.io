@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"golift.io/badgedata"
-	_ "golift.io/badgedata/grafana"
+	_ "golift.io/badgedata/grafana" // we use grafana here.
 	"golift.io/turbovanityurls/pkg/handler"
 	yaml "gopkg.in/yaml.v3"
 )
@@ -128,7 +128,7 @@ func (c *Config) Start() error {
 	}
 
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return err
+		return fmt.Errorf("web server problem: %w", err)
 	}
 
 	return nil
