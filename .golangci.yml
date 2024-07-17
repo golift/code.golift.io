@@ -2,19 +2,10 @@ linters:
   enable-all: true
   disable:
   # deprecated
-    - deadcode
-    - ifshort
-    - varcheck
-    - structcheck
-    - nosnakecase
-    - maligned
-    - scopelint
-    - interfacer
-    - golint
+    - execinquery
+    - gomnd
+  # unused
     - exhaustruct
-    - exhaustive
-    - exhaustivestruct
-    # unused
     - nlreturn
     - tagliatelle
     - varnamelen

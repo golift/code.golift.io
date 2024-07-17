@@ -1,6 +1,6 @@
 module golift.io/turbovanityurls
 
-go 1.16
+go 1.22
 
 require (
 	golift.io/badgedata v0.0.3

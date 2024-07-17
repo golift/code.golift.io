@@ -16,6 +16,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -82,8 +83,8 @@ var vcsPrefixMap = map[string][]string{ //nolint:gochecknoglobals
 
 // Errors this packages creates.
 var (
-	ErrNoHostValue = fmt.Errorf("must provide host value in config")
-	ErrUnknownVCS  = fmt.Errorf("unknown VCS configuration")
+	ErrNoHostValue = errors.New("must provide host value in config")
+	ErrUnknownVCS  = errors.New("unknown VCS configuration")
 )
 
 // PathReq is returned by find() with a non-nil PathConfig
@@ -339,8 +340,7 @@ func (pset PathConfigs) Find(path string) PathReq {
 
 	// After binary search with the >= lexicographic comparison,
 	// nothing greater than i will be a prefix of path.
-	max := i
-	for i := 0; i < max; i++ {
+	for i := range i {
 		if len(pset[i].Path) >= len(path) {
 			// We previously didn't find the request path by search, so any
 			// configured path with equal or greater length is NOT a match.

@@ -2,12 +2,15 @@
 package templates
 
 import (
+	"strconv"
 	"strings"
 	"text/template"
+	"time"
 )
 
 var Funcs = map[string]interface{}{
-	"TrimPrefix": strings.TrimPrefix,
+	"TrimPrefix":  strings.TrimPrefix,
+	"currentYear": func() string { return strconv.Itoa(time.Now().Year()) },
 	// Add more if you need them.
 }
 
@@ -17,7 +20,7 @@ var Index = template.Must(template.New("index").Funcs(Funcs).Parse(`<!DOCTYPE ht
 <head>
   <title>{{.Title}} - {{.Host}}</title>
   <link rel='icon' href='/favicon.ico' type='image/x-icon'/ >
-  <meta name="author" content="Copyright 2019-2021 - {{.Title}}">
+  <meta name="author" content="Copyright 2019-{{currentYear}} - {{.Title}}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
@@ -67,7 +70,7 @@ var Index = template.Must(template.New("index").Funcs(Funcs).Parse(`<!DOCTYPE ht
       </div>
 
       <div class="one-third column value-prop">
-        &copy; 2019-2021 {{.Title}}<br>
+        &copy; 2019-{{currentYear}} {{.Title}}<br>
 {{if .Src}}        (<a href="{{.Src}}">source</a>){{end}}
       </div>
     </div>
@@ -99,7 +102,7 @@ var Vanity = template.Must(template.New("vanity").Funcs(Funcs).Parse(`<!DOCTYPE 
   <meta name="go-import" content="{{.Host}}{{.ImportPath}} {{.VCS}} {{.RepoPath}}"/>
   <meta name="go-source" content="{{.SourcePath}}"/>
   <meta name="description" content="{{.RepoPath}}">
-  <meta name="author" content="Copyright 2019-2021 - {{.IndexTitle}}">
+  <meta name="author" content="Copyright 2019-{{currentYear}} - {{.IndexTitle}}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
@@ -160,7 +163,7 @@ var Vanity = template.Must(template.New("vanity").Funcs(Funcs).Parse(`<!DOCTYPE 
 {{- if .LogoURL}}
         <a href="https://{{.Host}}"><img class="value-img" src="{{.LogoURL}}"></a>
 {{- end}}
-        <p>&copy; 2019-2021 {{.IndexTitle}}<p>
+        <p>&copy; 2019-{{currentYear}} {{.IndexTitle}}<p>
       </div>
     </div>
 
