@@ -29,7 +29,7 @@ jobs:
           fetch-depth: '0'
       - uses: actions/setup-go@v3
         with:
-          go-version: 'stable'
+          go-version: stable
       - name: make-release
         id: release
         run: |
