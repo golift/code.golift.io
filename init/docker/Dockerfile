@@ -3,12 +3,12 @@
 # https://github.com/golift/application-builder
 #
 
-FROM golang:1-buster as builder
+FROM golang:1-bookworm as builder
 
 # Build speed magic! 
 # https://www.docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide/
 WORKDIR /src
-COPY go.mod go.sum .
+COPY go.mod go.sum ./
 RUN go mod download
 COPY main.go .
 COPY pkg pkg
